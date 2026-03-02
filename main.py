@@ -157,6 +157,8 @@ if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
 if 'players' not in st.session_state:
     st.session_state.players = []
+if 'add_player_clicked' not in st.session_state:
+    st.session_state.add_player_clicked = False
 if 'current_session_id' not in st.session_state:
     st.session_state.current_session_id = None
 
@@ -246,28 +248,74 @@ def render_theme_toggle():
             st.session_state.theme = 'dark' if st.session_state.theme == 'light' else 'light'
             st.rerun()
 
+def add_player():
+    """Callback to add player"""
+    name = st.session_state.get('input_name', '').strip()
+    buy_in = float(st.session_state.get('input_buy_in', 1000))
+    final = float(st.session_state.get('input_final', 0))
+    
+    if name:
+        st.session_state.players.append({
+            'name': name,
+            'buy_in': buy_in,
+            'final': final
+        })
+        st.session_state.input_name = ''  # Clear input
+        st.session_state.input_buy_in = 1000
+        st.session_state.input_final = 0
+
 def render_player_input():
-    """Render player input form"""
+    """Render player input form - simplified version"""
     st.subheader("👥 Add Players")
     
-    col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+    # Create a container for the input row
+    container = st.container()
     
-    with col1:
-        name = st.text_input("Player Name", key="player_name")
-    with col2:
-        buy_in = st.number_input("Buy-in (chips)", min_value=0.0, value=1000.0, step=100.0, key="buy_in")
-    with col3:
-        final = st.number_input("Final Stack (chips)", min_value=0.0, value=0.0, step=100.0, key="final")
-    with col4:
-        st.write("")  # Spacer
-        if st.button("➕ Add", type="primary"):
-            if name:
-                st.session_state.players.append({
-                    'name': name,
-                    'buy_in': buy_in,
-                    'final': final
-                })
-                st.rerun()
+    with container:
+        col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+        
+        with col1:
+            # Use a unique key with timestamp to force refresh
+            name_input = st.text_input(
+                "Player Name", 
+                key=f"name_input_{len(st.session_state.players)}",
+                placeholder="Enter player name..."
+            )
+        with col2:
+            buy_in_input = st.number_input(
+                "Buy-in (chips)", 
+                min_value=0.0, 
+                value=1000.0, 
+                step=100.0,
+                key=f"buyin_input_{len(st.session_state.players)}"
+            )
+        with col3:
+            final_input = st.number_input(
+                "Final Stack (chips)", 
+                min_value=0.0, 
+                value=0.0, 
+                step=100.0,
+                key=f"final_input_{len(st.session_state.players)}"
+            )
+        with col4:
+            st.write("")  
+            st.write("")
+            add_clicked = st.button("➕ Add", key="add_player_btn")
+    
+    # Handle add button click
+    if add_clicked and name_input:
+        if name_input.strip():
+            st.session_state.players.append({
+                'name': name_input.strip(),
+                'buy_in': float(buy_in_input),
+                'final': float(final_input)
+            })
+            st.rerun()
+        else:
+            st.error("Please enter a player name!")
+    
+    # Show current count
+    st.caption(f"Current players: {len(st.session_state.players)}")
 
 def render_current_players():
     """Render current players list"""
