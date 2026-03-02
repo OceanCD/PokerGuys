@@ -264,26 +264,15 @@ def add_player():
         st.session_state.input_final = 0
 
 def render_player_input():
-    """Render player input - card style for mobile-friendly"""
-    # Top section: Global buy-in amount + Add player button
+    """Render player input - table style like reference"""
+    # Top section
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        global_buy_in = st.number_input(
-            "Buy-in", 
-            min_value=0.0, 
-            value=1000.0, 
-            step=100.0,
-            key="global_buy_in"
-        )
+        global_buy_in = st.number_input("Buy-in", min_value=0.0, value=1000.0, step=100.0, key="global_buy_in")
     
     with col2:
-        new_name = st.text_input(
-            "Player", 
-            placeholder="Nickname...", 
-            key="new_player_name",
-            label_visibility="collapsed"
-        )
+        new_name = st.text_input("Player", placeholder="Nickname...", key="new_player_name", label_visibility="collapsed")
         if st.button("➕ Add", type="primary", use_container_width=True):
             if new_name and new_name.strip():
                 st.session_state.players.append({
@@ -296,7 +285,14 @@ def render_player_input():
     
     st.divider()
     
-    # Player cards - mobile friendly
+    # Header row
+    c1, c2, c3, c4, c5 = st.columns([3, 1, 1, 2, 1])
+    with c1: st.markdown("**Name**")
+    with c2: st.markdown("**Hands**")
+    with c3: st.markdown("**Stack**")
+    with c4: st.markdown("**P&L**")
+    with c5: st.markdown("")
+    
     if not st.session_state.players:
         st.info("No players yet.")
     else:
@@ -304,62 +300,56 @@ def render_player_input():
         total_down = 0
         
         for i, p in enumerate(st.session_state.players):
-            # Calculate P&L
             pnl = p['stack'] - p['buy_in']
+            pnl_color = "#f6465d" if pnl >= 0 else "#0b8a4e"
+            pnl_prefix = "+" if pnl >= 0 else ""
+            
             if pnl >= 0:
-                pnl_color = "#f6465d"
                 total_up += pnl
             else:
-                pnl_color = "#0b8a4e"
                 total_down += pnl
             
-            # Card for each player
-            with st.container():
-                # Name row
-                c1, c2 = st.columns([4, 1])
-                with c1:
-                    p['name'] = st.text_input(
-                        "Name", 
-                        value=p['name'], 
-                        key=f"name_{i}",
-                        label_visibility="visible"
-                    )
-                with c2:
-                    if st.button("🗑️", key=f"del_{i}"):
-                        st.session_state.players.pop(i)
-                        st.rerun()
-                
-                # Hands and Stack row
-                c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
-                with c1:
-                    if st.button("➖", key=f"dec_{i}"):
+            # Player row - compact
+            c1, c2, c3, c4, c5 = st.columns([3, 1, 1, 2, 1])
+            
+            with c1:
+                p['name'] = st.text_input("", value=p['name'], key=f"name_{i}", label_visibility="collapsed")
+            
+            with c2:
+                # Hands with +/-
+                h1, h2, h3 = st.columns([1, 1, 1])
+                with h1:
+                    if st.button("−", key=f"dec_{i}", use_container_width=True):
                         if p['hands'] > 1:
                             p['hands'] -= 1
                             p['buy_in'] = p['hands'] * global_buy_in
                             st.rerun()
-                with c2:
-                    st.markdown(f"<div style='text-align:center;padding:8px;'>Hands: <b>{p['hands']}</b></div>", unsafe_allow_html=True)
-                with c3:
-                    p['stack'] = st.number_input(
-                        "Stack", 
-                        min_value=0.0, 
-                        value=float(p['stack']), 
-                        step=100.0,
-                        key=f"stack_{i}",
-                        label_visibility="visible"
-                    )
-                with c4:
-                    st.markdown(f"<div style='text-align:center;padding:8px;'>P&L: <b style='color:{pnl_color}'>{pnl:+,.0f}</b></div>", unsafe_allow_html=True)
-                
-                st.divider()
+                with h2:
+                    st.markdown(f"<div style='text-align:center;padding:8px 0;font-weight:bold;'>{p['hands']}</div>", unsafe_allow_html=True)
+                with h3:
+                    if st.button("+", key=f"inc_{i}", use_container_width=True):
+                        p['hands'] += 1
+                        p['buy_in'] = p['hands'] * global_buy_in
+                        st.rerun()
+            
+            with c3:
+                p['stack'] = st.number_input("", min_value=0.0, value=float(p['stack']), step=100.0, key=f"stack_{i}", label_visibility="collapsed")
+            
+            with c4:
+                st.markdown(f"<div style='text-align:right;padding:8px 0;font-weight:bold;color:{pnl_color};'>{pnl_prefix}{int(pnl):,}</div>", unsafe_allow_html=True)
+            
+            with c5:
+                if st.button("🗑️", key=f"del_{i}"):
+                    st.session_state.players.pop(i)
+                    st.rerun()
+            
+            st.markdown("<hr style='margin:2px 0;opacity:0.2;'>", unsafe_allow_html=True)
         
-        # Bottom totals
-        cols = st.columns(3)
-        with cols[0]:
-            st.metric("Total Up", f"{total_up:,.0f}")
-        with cols[1]:
-            st.metric("Total Down", f"{total_down:,.0f}")
-        with cols[2]:
+        # Totals
+        c1, c2, c3 = st.columns(3)
+        with c1: st.metric("Total Up", f"{total_up:,.0f}")
+        with c2: st.metric("Total Down", f"{total_down:,.0f}")
+        with c3:
             balance = total_up + total_down
             if abs(balance) < 1:
                 st.success("✅ Balanced")
