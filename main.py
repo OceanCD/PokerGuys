@@ -265,14 +265,12 @@ def add_player():
 
 def render_player_input():
     """Render player input - table style like reference image"""
-    st.subheader("🃏 德扑记账")
-    
     # Top section: Global buy-in amount + Add player button
     col1, col2 = st.columns([1, 1])
     
     with col1:
         global_buy_in = st.number_input(
-            "买入金额 (Buy-in)", 
+            "Buy-in Amount", 
             min_value=0.0, 
             value=1000.0, 
             step=100.0,
@@ -282,12 +280,12 @@ def render_player_input():
     with col2:
         # Add new player button
         new_name = st.text_input(
-            "新玩家昵称", 
-            placeholder="输入昵称...", 
+            "New Player", 
+            placeholder="Enter nickname...", 
             key="new_player_name",
             label_visibility="collapsed"
         )
-        if st.button("➕ 新人上桌", type="primary", use_container_width=True):
+        if st.button("➕ Add Player", type="primary", use_container_width=True):
             if new_name and new_name.strip():
                 st.session_state.players.append({
                     'name': new_name.strip(),
@@ -297,23 +295,23 @@ def render_player_input():
                 })
                 st.rerun()
     
-    st.caption("点击昵称和码量可进行修改，牌局结束后输入每人剩余码量将自动计算盈亏。")
+    st.caption("Click nickname or stack to edit. After session, enter remaining stack to auto-calculate P&L.")
     st.divider()
     
     # Main table - Player list
     if not st.session_state.players:
-        st.info("暂无玩家，点击上方按钮添加")
+        st.info("No players yet. Add players above.")
     else:
         # Table header
         cols = st.columns([2, 2, 2, 2, 1])
         with cols[0]:
-            st.markdown("**昵称**")
+            st.markdown("**Name**")
         with cols[1]:
-            st.markdown("**手数**")
+            st.markdown("**Hands**")
         with cols[2]:
-            st.markdown("**码量**")
+            st.markdown("**Stack**")
         with cols[3]:
-            st.markdown("**盈亏**")
+            st.markdown("**P&L**")
         with cols[4]:
             st.markdown("")
         
@@ -390,15 +388,15 @@ def render_player_input():
         # Bottom: Totals
         cols = st.columns(3)
         with cols[0]:
-            st.metric("总水上", f"{total_up:,.0f}")
+            st.metric("Total Up", f"{total_up:,.0f}")
         with cols[1]:
-            st.metric("总水下", f"{total_down:,.0f}")
+            st.metric("Total Down", f"{total_down:,.0f}")
         with cols[2]:
             balance = total_up + total_down
             if abs(balance) < 1:
-                st.success("✅ 账平")
+                st.success("✅ Balanced")
             else:
-                st.error(f"❌ 账不平: {balance:,.0f}")
+                st.error(f"❌ Unbalanced: {balance:,.0f}")
         
         # Data saved note
         st.caption("💾 数据已本地保存，关闭应用不会丢失")
@@ -608,12 +606,11 @@ def render_stats():
 def main():
     """Main app"""
     apply_theme()
-    render_theme_toggle()
     
     # Larger header at top
     st.markdown("""
-        <div style="text-align: center; padding: 10px 0;">
-            <h1 style="font-size: 2.5em; margin: 0;">🃏 PokerGuys</h1>
+        <div style="text-align: center; padding: 20px 0;">
+            <h1 style="font-size: 3em; margin: 0;">🃏 PokerGuys</h1>
             <p style="color: #888; margin: 5px 0;">Texas Hold'em Session Tracker</p>
         </div>
     """, unsafe_allow_html=True)
