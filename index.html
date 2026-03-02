@@ -7,11 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         
-        :root {
-            --bg: #0b0e11; --card: #1e2329; --border: #2a2e39;
-            --gold: #f0b90b; --profit: #f6465d; --loss: #0b8a4e;
-            --text: #eaecef; --text-dim: #848e9c;
-        }
+        :root { --bg: #0b0e11; --card: #1e2329; --border: #2a2e39; --gold: #f0b90b; --profit: #f6465d; --loss: #0b8a4e; --text: #eaecef; --text-dim: #848e9c; }
         
         body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; }
         
@@ -24,10 +20,7 @@
         .input-group { flex: 1; }
         .input-group label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; }
         
-        input[type="number"], input[type="text"] {
-            width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text); font-size: 16px;
-        }
+        input[type="number"], input[type="text"], input[type="date"] { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; }
         input:focus { outline: none; border-color: var(--gold); }
         
         .btn-add { width: 100%; padding: 14px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
@@ -75,8 +68,7 @@
         .page { display: none; }
         .page.active { display: block; }
         
-        .history-item        /* History */
- { padding: 15px; background: var(--card); border-radius: 8px; margin: 10px 15px; cursor: pointer; }
+        .history-item { padding: 15px; background: var(--card); border-radius: 8px; margin: 10px 15px; cursor: pointer; }
         .history-header { display: flex; justify-content: space-between; align-items: center; }
         .history-date { font-weight: bold; color: var(--gold); }
         .history-location { color: var(--text-dim); font-size: 12px; }
@@ -84,7 +76,6 @@
         .history-winner .label { font-size: 10px; color: var(--text-dim); }
         .history-winner .name { font-weight: bold; color: var(--profit); font-size: 14px; }
         
-        /* Session Detail Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; overflow-y: auto; }
         .modal.active { display: block; }
         .modal-content { background: var(--bg); max-width: 600px; margin: 20px auto; border-radius: 12px; padding: 20px; }
@@ -102,12 +93,11 @@
         .btn-save-changes { flex: 1; padding: 12px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-delete-session { flex: 1; padding: 12px; background: transparent; color: var(--profit); border: 1px solid var(--profit); border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        /* Stats */
         .stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .stat-card { background: var(--card); padding: 15px; border-radius: 8px; text-align: center; }
         .stat-card.full { grid-column: span 2; }
         .stat-card .label { font-size: 11px; color: var(--text-dim); margin-bottom: 5px; }
-        .stat-card .value { font-size: 20px; font-weight: bold; color: var(--gold); }
+        .stat-card .value { font-size: 18px; font-weight: bold; color: var(--gold); }
         .stat-card .value.positive { color: var(--profit); }
         .stat-card .value.negative { color: var(--loss); }
         
@@ -125,8 +115,14 @@
         .player-stats { padding: 15px; }
         .player-stats h3 { color: var(--gold); margin-bottom: 10px; font-size: 16px; }
         
-        .player-stat-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .player-stat-row.header { color: var(--gold); font-weight: 600; font-size: 11px; }
+        .player-stat-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
+        .player-stat-row:hover { background: var(--card); }
+        .player-stat-row.header { cursor: default; }
+        .player-stat-row.header:hover { background: transparent; }
+        
+        .player-detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .player-detail-row .date { color: var(--gold); font-weight: bold; }
+        .player-detail-row .pnl { font-weight: bold; }
         
         .empty { text-align: center; padding: 40px; color: var(--text-dim); }
         
@@ -140,7 +136,6 @@
             <p>Texas Hold'em Session Tracker</p>
         </div>
         
-        <!-- Session Page -->
         <div id="page-session" class="page active">
             <div class="input-section">
                 <div class="input-row">
@@ -176,12 +171,10 @@
             </div>
         </div>
         
-        <!-- History Page -->
         <div id="page-history" class="page">
             <div id="historyList"></div>
         </div>
         
-        <!-- Stats Page -->
         <div id="page-stats" class="page">
             <div id="statsContent"></div>
         </div>
@@ -192,14 +185,12 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Edit Session</h2>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button class="modal-close" onclick="closeModal('sessionModal')">×</button>
             </div>
-            
             <div class="modal-input">
                 <label>Date</label>
                 <input type="date" id="editDate">
             </div>
-            
             <div class="table-header" style="border-radius: 8px 8px 0 0;">
                 <div>Name</div>
                 <div style="text-align:center">Hands</div>
@@ -208,11 +199,31 @@
                 <div></div>
             </div>
             <div id="editPlayersList" style="background: var(--card); border-radius: 0 0 8px 8px; margin-bottom: 15px;"></div>
-            
             <div class="modal-actions">
                 <button class="btn-save-changes" onclick="saveSessionChanges()">💾 Save Changes</button>
                 <button class="btn-delete-session" onclick="deleteCurrentSession()">🗑️ Delete</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- Player Detail Modal -->
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="playerModalTitle">Player History</h2>
+                <button class="modal-close" onclick="closeModal('playerModal')">×</button>
+            </div>
+            <div class="stats-summary" style="margin-bottom: 15px;">
+                <div class="stat-card">
+                    <div class="label">Sessions</div>
+                    <div class="value" id="playerTotalSessions">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Net</div>
+                    <div class="value" id="playerTotalNet">0</div>
+                </div>
+            </div>
+            <div id="playerSessionsList" style="max-height: 400px; overflow-y: auto;"></div>
         </div>
     </div>
     
@@ -266,12 +277,8 @@
         }
         
         function updateAllStacks() {
-            // Update all players' buy-in based on new buy-in amount
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
-            players.forEach(p => {
-                p.buyIn = p.hands * baseBuyIn;
-                p.stack = p.buyIn;
-            });
+            players.forEach(p => { p.buyIn = p.hands * baseBuyIn; p.stack = p.buyIn; });
             renderPlayers();
         }
         
@@ -279,17 +286,12 @@
         
         function calculateTotals() {
             let totalUp = 0, totalDown = 0;
-            players.forEach(p => {
-                const pnl = p.stack - p.buyIn;
-                if (pnl >= 0) totalUp += pnl;
-                else totalDown += pnl;
-            });
+            players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += pnl; });
             return { totalUp, totalDown, net: totalUp + totalDown };
         }
         
         function renderPlayers() {
             const { totalUp, totalDown, net } = calculateTotals();
-            
             if (players.length === 0) {
                 playersList.innerHTML = '<div class="empty">No players yet.</div>';
             } else {
@@ -298,22 +300,10 @@
                     const pnl = p.stack - p.buyIn;
                     const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                     const pnlPrefix = pnl >= 0 ? '+' : '';
-                    html += `
-                    <div class="player-row">
-                        <div><input type="text" class="name-input" value="${p.name}" onchange="updateName(${i}, this.value)"></div>
-                        <div class="hands-control">
-                            <button class="btn-hands" onclick="changeHands(${i}, -1)">−</button>
-                            <span class="hands-num">${p.hands}</span>
-                            <button class="btn-hands" onclick="changeHands(${i}, 1)">+</button>
-                        </div>
-                        <div><input type="number" class="stack-input" value="${p.stack}" onchange="updateStack(${i}, this.value)"></div>
-                        <div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl).toLocaleString()}</div>
-                        <button class="btn-delete" onclick="removePlayer(${i})">🗑️</button>
-                    </div>`;
+                    html += `<div class="player-row"><div><input type="text" class="name-input" value="${p.name}" onchange="updateName(${i}, this.value)"></div><div class="hands-control"><button class="btn-hands" onclick="changeHands(${i}, -1)">−</button><span class="hands-num">${p.hands}</span><button class="btn-hands" onclick="changeHands(${i}, 1)">+</button></div><div><input type="number" class="stack-input" value="${p.stack}" onchange="updateStack(${i}, this.value)"></div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl).toLocaleString()}</div><button class="btn-delete" onclick="removePlayer(${i})">🗑️</button></div>`;
                 });
                 playersList.innerHTML = html;
             }
-            
             renderNetStatus(net);
             renderTotals(totalUp, totalDown);
         }
@@ -321,82 +311,35 @@
         function renderNetStatus(net) {
             const netDiv = document.getElementById('netStatus');
             if (players.length === 0) { netDiv.innerHTML = ''; return; }
-            
-            if (Math.abs(net) < 1) {
-                netDiv.innerHTML = `<div class="net-status even">✅ Table is EVEN</div>`;
-            } else if (net > 0) {
-                netDiv.innerHTML = `<div class="net-status win">📈 Table WINNING by ${Math.round(net).toLocaleString()}</div>`;
-            } else {
-                netDiv.innerHTML = `<div class="net-status loss">📉 Table LOSING by ${Math.round(Math.abs(net)).toLocaleString()}</div>`;
-            }
+            if (Math.abs(net) < 1) netDiv.innerHTML = '<div class="net-status even">✅ Table is EVEN</div>';
+            else if (net > 0) netDiv.innerHTML = `<div class="net-status win">📈 Table WINNING by ${Math.round(net).toLocaleString()}</div>`;
+            else netDiv.innerHTML = `<div class="net-status loss">📉 Table LOSING by ${Math.round(Math.abs(net)).toLocaleString()}</div>`;
         }
         
         function renderTotals(totalUp, totalDown) {
             let totalsDiv = document.getElementById('totals');
-            if (!totalsDiv) {
-                totalsDiv = document.createElement('div');
-                totalsDiv.id = 'totals';
-                totalsDiv.className = 'totals';
-                document.body.appendChild(totalsDiv);
-            }
-            totalsDiv.innerHTML = `
-                <div class="total-item"><div class="label">Total Up</div><div class="value">${Math.round(totalUp).toLocaleString()}</div></div>
-                <div class="total-item"><div class="label">Total Down</div><div class="value">${Math.round(totalDown).toLocaleString()}</div></div>
-                <div class="total-item"><div class="label">Net</div><div class="value">${Math.round(totalUp + totalDown).toLocaleString()}</div></div>
-            `;
+            if (!totalsDiv) { totalsDiv = document.createElement('div'); totalsDiv.id = 'totals'; totalsDiv.className = 'totals'; document.body.appendChild(totalsDiv); }
+            totalsDiv.innerHTML = `<div class="total-item"><div class="label">Total Up</div><div class="value">${Math.round(totalUp).toLocaleString()}</div></div><div class="total-item"><div class="label">Total Down</div><div class="value">${Math.round(totalDown).toLocaleString()}</div></div><div class="total-item"><div class="label">Net</div><div class="value">${Math.round(totalUp + totalDown).toLocaleString()}</div></div>`;
         }
         
         function saveSession() {
             const { net } = calculateTotals();
-            if (Math.abs(net) >= 1) { alert(`Cannot save: Table imbalance of ${Math.round(net)} chips!`); return; }
-            
-            const session = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                players: JSON.parse(JSON.stringify(players)),
-                totalUp: calculateTotals().totalUp,
-                totalDown: calculateTotals().totalDown,
-                net
-            };
-            
+            if (Math.abs(net) >= 1) { alert('Cannot save: Table imbalance!'); return; }
+            const session = { id: Date.now(), date: new Date().toISOString().split('T')[0], players: JSON.parse(JSON.stringify(players)), totalUp: calculateTotals().totalUp, totalDown: calculateTotals().totalDown, net };
             sessions.unshift(session);
             localStorage.setItem('pokerSessions', JSON.stringify(sessions));
-            
-            players = [];
-            confirmCheck.checked = false;
-            saveBtn.disabled = true;
-            
-            renderPlayers();
-            renderHistory();
-            alert('Session saved!');
+            players = []; confirmCheck.checked = false; saveBtn.disabled = true;
+            renderPlayers(); renderHistory(); alert('Session saved!');
         }
         
         function renderHistory() {
             const historyList = document.getElementById('historyList');
             if (sessions.length === 0) { historyList.innerHTML = '<div class="empty">No sessions recorded yet.</div>'; return; }
-            
             let html = '';
             sessions.forEach(session => {
-                // Find biggest winner
                 let biggestWinner = { name: '', pnl: -Infinity };
-                session.players.forEach(p => {
-                    const pnl = p.stack - p.buyIn;
-                    if (pnl > biggestWinner.pnl) { biggestWinner = { name: p.name, pnl }; }
-                });
-                
-                html += `
-                <div class="history-item" onclick="openEditModal(${session.id})">
-                    <div class="history-header">
-                        <div>
-                            <div class="history-date">${session.date}</div>
-                            <div class="history-location">${session.players.length} players</div>
-                        </div>
-                        <div class="history-winner">
-                            <div class="label">Biggest Winner</div>
-                            <div class="name">${biggestWinner.name || '-'}</div>
-                        </div>
-                    </div>
-                </div>`;
+                session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl }; });
+                html += `<div class="history-item" onclick="openEditModal(${session.id})"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} players</div></div><div class="history-winner"><div class="label">Biggest Winner</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
             });
             historyList.innerHTML = html;
         }
@@ -405,7 +348,6 @@
             editingSessionId = sessionId;
             const session = sessions.find(s => s.id === sessionId);
             if (!session) return;
-            
             document.getElementById('editDate').value = session.date;
             renderEditPlayers(session.players);
             document.getElementById('sessionModal').classList.add('active');
@@ -418,16 +360,9 @@
                 const pnl = p.stack - p.buyIn;
                 const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                 const pnlPrefix = pnl >= 0 ? '+' : '';
-                html += `
-                <div class="player-edit-row">
-                    <input type="text" value="${p.name}" id="editName_${i}">
-                    <div style="text-align:center">${p.hands}</div>
-                    <input type="number" value="${p.stack}" id="editStack_${i}">
-                    <div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div>
-                    <button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button>
-                </div>`;
+                html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><div style="text-align:center">${p.hands}</div><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
             });
-            html += `<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">➕ Add Player</button>`;
+            html += '<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">➕ Add Player</button>';
             document.getElementById('editPlayersList').innerHTML = html;
         }
         
@@ -449,48 +384,26 @@
         function saveSessionChanges() {
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
-            
-            // Update date
             session.date = document.getElementById('editDate').value;
-            
-            // Update players
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
-            session.players.forEach((p, i) => {
-                p.name = document.getElementById(`editName_${i}`).value;
-                p.stack = parseFloat(document.getElementById(`editStack_${i}`).value) || 0;
-                p.buyIn = p.hands * baseBuyIn;
-            });
-            
-            // Recalculate totals
+            session.players.forEach((p, i) => { p.name = document.getElementById('editName_' + i).value; p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0; p.buyIn = p.hands * baseBuyIn; });
             let totalUp = 0, totalDown = 0;
-            session.players.forEach(p => {
-                const pnl = p.stack - p.buyIn;
-                if (pnl >= 0) totalUp += pnl;
-                else totalDown += pnl;
-            });
-            session.totalUp = totalUp;
-            session.totalDown = totalDown;
-            session.net = totalUp + totalDown;
-            
+            session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += pnl; });
+            session.totalUp = totalUp; session.totalDown = totalDown; session.net = totalUp + totalDown;
             localStorage.setItem('pokerSessions', JSON.stringify(sessions));
-            closeModal();
-            renderHistory();
-            renderStats();
-            alert('Changes saved!');
+            closeModal('sessionModal'); renderHistory(); renderStats(); alert('Changes saved!');
         }
         
         function deleteCurrentSession() {
             if (!confirm('Are you sure you want to delete this session?')) return;
             sessions = sessions.filter(s => s.id !== editingSessionId);
             localStorage.setItem('pokerSessions', JSON.stringify(sessions));
-            closeModal();
-            renderHistory();
-            renderStats();
+            closeModal('sessionModal'); renderHistory(); renderStats();
         }
         
-        function closeModal() {
-            document.getElementById('sessionModal').classList.remove('active');
-            editingSessionId = null;
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            if (modalId === 'sessionModal') editingSessionId = null;
         }
         
         function renderStats() {
@@ -498,48 +411,58 @@
             if (sessions.length === 0) { statsDiv.innerHTML = '<div class="empty">No data yet. Play some sessions!</div>'; return; }
             
             const playerStats = {};
-            let totalSessions = sessions.length, totalBuyIn = 0, totalFinal = 0, totalNet = 0;
+            let totalSessions = sessions.length, totalBuyIn = 0, totalFinal = 0, highestSessionWin = 0, highestSessionWinName = '';
             
             sessions.forEach(session => {
                 session.players.forEach(p => {
+                    const pnl = p.stack - p.buyIn;
+                    if (pnl > highestSessionWin) { highestSessionWin = pnl; highestSessionWinName = p.name; }
                     if (!playerStats[p.name]) playerStats[p.name] = { buyIn: 0, final: 0, sessions: 0, net: 0 };
-                    playerStats[p.name].buyIn += p.buyIn;
-                    playerStats[p.name].final += p.stack;
-                    playerStats[p.name].sessions += 1;
-                    playerStats[p.name].net += (p.stack - p.buyIn);
-                    totalBuyIn += p.buyIn;
-                    totalFinal += p.stack;
-                    totalNet += (p.stack - p.buyIn);
+                    playerStats[p.name].buyIn += p.buyIn; playerStats[p.name].final += p.stack; playerStats[p.name].sessions += 1; playerStats[p.name].net += pnl;
+                    totalBuyIn += p.buyIn; totalFinal += p.stack;
                 });
             });
             
-            let html = `
-                <div class="stats-summary">
-                    <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
-                    <div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div>
-                    <div class="stat-card"><div class="label">Total Buy-in</div><div class="value">${Math.round(totalBuyIn).toLocaleString()}</div></div>
-                    <div class="stat-card"><div class="label">Total Final</div><div class="value">${Math.round(totalFinal).toLocaleString()}</div></div>
-                    <div class="stat-card full"><div class="label">Net P&L (All Time)</div><div class="value ${totalNet >= 0 ? 'positive' : 'negative'}">${totalNet >= 0 ? '+' : ''}${Math.round(totalNet).toLocaleString()}</div></div>
-                </div>
-                <div class="chart-container"><div class="chart-title">📊 P&L by Player</div><div class="bar-chart">`;
+            const avgBuyInPerSession = totalBuyIn / totalSessions;
+            
+            let highestWinner = { name: '', net: -Infinity };
+            Object.entries(playerStats).forEach(([name, stats]) => { if (stats.net > highestWinner.net) highestWinner = { name, net: stats.net }; });
+            
+            let html = `<div class="stats-summary"><div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div><div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div><div class="stat-card"><div class="label">Avg Buy-in/Session</div><div class="value">${Math.round(avgBuyInPerSession).toLocaleString()}</div></div><div class="stat-card"><div class="label">Highest Session Win</div><div class="value positive">${highestSessionWinName ? highestSessionWinName + ': +' + Math.round(highestSessionWin).toLocaleString() : '-'}</div></div><div class="stat-card full"><div class="label">Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div></div><div class="chart-container"><div class="chart-title">📊 P&L by Player</div><div class="bar-chart">`;
             
             const sortedPlayers = Object.entries(playerStats).sort((a, b) => b[1].net - a[1].net);
             const maxNet = Math.max(...sortedPlayers.map(p => Math.abs(p[1].net)), 1);
             
-            sortedPlayers.forEach(([name, stats]) => {
-                const height = (Math.abs(stats.net) / maxNet) * 100;
-                html += `<div class="bar"><div class="bar-value">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net)}</div><div class="bar-fill ${stats.net >= 0 ? 'positive' : 'negative'}" style="height: ${height}%;"></div><div class="bar-label">${name}</div></div>`;
-            });
+            sortedPlayers.forEach(([name, stats]) => { const height = (Math.abs(stats.net) / maxNet) * 100; html += `<div class="bar"><div class="bar-value">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net)}</div><div class="bar-fill ${stats.net >= 0 ? 'positive' : 'negative'}" style="height: ${height}%;"></div><div class="bar-label">${name}</div></div>`; });
             
-            html += `</div></div><div class="player-stats"><h3>🏆 Player Performance</h3><div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Buy-in</div><div>Final</div><div>Net</div></div>`;
+            html += '</div></div><div class="player-stats"><h3>🏆 Player Performance (Click to view)</h3><div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Buy-in</div><div>Final</div><div>Net</div></div>';
             
-            sortedPlayers.forEach(([name, stats]) => {
-                const pnlClass = stats.net >= 0 ? 'pnl-positive' : 'pnl-negative';
-                html += `<div class="player-stat-row"><div>${name}</div><div>${stats.sessions}</div><div>${Math.round(stats.buyIn).toLocaleString()}</div><div>${Math.round(stats.final).toLocaleString()}</div><div class="${pnlClass}">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net).toLocaleString()}</div></div>`;
-            });
+            sortedPlayers.forEach(([name, stats]) => { const pnlClass = stats.net >= 0 ? 'pnl-positive' : 'pnl-negative'; html += `<div class="player-stat-row" onclick="showPlayerDetail('${name}')"><div>${name}</div><div>${stats.sessions}</div><div>${Math.round(stats.buyIn).toLocaleString()}</div><div>${Math.round(stats.final).toLocaleString()}</div><div class="${pnlClass}">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net).toLocaleString()}</div></div>`; });
             
             html += '</div>';
             statsDiv.innerHTML = html;
+        }
+        
+        function showPlayerDetail(playerName) {
+            document.getElementById('playerModalTitle').textContent = playerName;
+            
+            const playerSessions = [];
+            sessions.forEach(session => {
+                const player = session.players.find(p => p.name === playerName);
+                if (player) { playerSessions.push({ date: session.date, pnl: player.stack - player.buyIn, buyIn: player.buyIn, final: player.stack, hands: player.hands }); }
+            });
+            
+            playerSessions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const totalNet = playerSessions.reduce((sum, s) => sum + s.pnl, 0);
+            document.getElementById('playerTotalSessions').textContent = playerSessions.length;
+            document.getElementById('playerTotalNet').textContent = (totalNet >= 0 ? '+' : '') + Math.round(totalNet).toLocaleString();
+            document.getElementById('playerTotalNet').className = 'value ' + (totalNet >= 0 ? 'positive' : 'negative');
+            
+            let html = '';
+            playerSessions.forEach(s => { const pnlClass = s.pnl >= 0 ? 'positive' : 'negative'; const pnlPrefix = s.pnl >= 0 ? '+' : ''; html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>Hands: ${s.hands}</div><div>Buy-in: ${Math.round(s.buyIn).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`; });
+            document.getElementById('playerSessionsList').innerHTML = html || '<div class="empty">No sessions</div>';
+            document.getElementById('playerModal').classList.add('active');
         }
         
         function showPage(pageName) {
@@ -551,9 +474,7 @@
             if (pageName === 'stats') renderStats();
         }
         
-        renderPlayers();
-        renderHistory();
-        
+        renderPlayers(); renderHistory();
         newPlayerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addPlayer(); });
     </script>
 </body>
