@@ -468,7 +468,7 @@ def render_session_form():
     
     if st.session_state.players:
         # Confirmation checkbox
-        confirm = st.checkbox("我确认要保存会话（这将清除当前输入）", key="confirm_save")
+        confirm = st.checkbox("I confirm to save session (this will clear current inputs)", key="confirm_save")
         
         if st.button("💾 Save Session", type="primary", use_container_width=True, disabled=not confirm):
             if not confirm:
@@ -490,14 +490,6 @@ def render_session_form():
                     notes,
                     st.session_state.players
                 )
-                st.success(f"✅ Session saved! (ID: {session_id})")
-                # Reset
-                st.session_state.players = []
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error saving: {e}")
-    else:
-        st.info("Add players to save a session")
                 st.success(f"✅ Session saved! (ID: {session_id})")
                 # Reset
                 st.session_state.players = []
