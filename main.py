@@ -37,7 +37,6 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL,
             location TEXT,
-            notes TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -161,14 +160,14 @@ if 'current_session_id' not in st.session_state:
     st.session_state.current_session_id = None
 
 # ============== DATABASE FUNCTIONS ==============
-def save_session(date, location, notes, players_data):
+def save_session(date, location, players_data):
     """Save a session to database"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
     # Insert session
-    c.execute("INSERT INTO sessions (date, location, notes) VALUES (?, ?, ?)",
-              (date, location, notes))
+    c.execute("INSERT INTO sessions (date, location) VALUES (?, ?)",
+              (date, location))
     session_id = c.lastrowid
     
     # Insert players
@@ -458,8 +457,6 @@ def render_session_form():
     with col2:
         location = st.text_input("Location", placeholder="e.g., Home Game, Poker Club...")
     
-    notes = st.text_area("Notes (optional)", placeholder="Buy-in structure, game type, etc.")
-    
     # Player input
     render_player_input()
     
@@ -487,7 +484,6 @@ def render_session_form():
                 session_id = save_session(
                     date.strftime("%Y-%m-%d"),
                     location,
-                    notes,
                     st.session_state.players
                 )
                 st.success(f"✅ Session saved! (ID: {session_id})")
@@ -614,8 +610,31 @@ def main():
     apply_theme()
     render_theme_toggle()
     
-    st.title("🃏 PokerGuys")
-    st.caption("Texas Hold'em Session Tracker")
+    # Larger header at top
+    st.markdown("""
+        <div style="text-align: center; padding: 10px 0;">
+            <h1 style="font-size: 2.5em; margin: 0;">🃏 PokerGuys</h1>
+            <p style="color: #888; margin: 5px 0;">Texas Hold'em Session Tracker</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Phone preview toggle
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        phone_mode = st.checkbox("📱 Phone View", value=False, key="phone_mode")
+    
+    # Phone container
+    if phone_mode:
+        st.markdown("""
+            <div style="
+                max-width: 375px; 
+                margin: 0 auto; 
+                border: 2px solid #333; 
+                border-radius: 20px; 
+                padding: 10px;
+                background: #0b0e11;
+            ">
+        """, unsafe_allow_html=True)
     
     # Sidebar navigation
     st.sidebar.title("Navigation")
@@ -625,6 +644,12 @@ def main():
         render_session_form()
     elif page == "History":
         render_history()
+    elif page == "Statistics":
+        render_stats()
+    
+    # Close phone container
+    if phone_mode:
+        st.markdown("</div>", unsafe_allow_html=True)
     elif page == "Statistics":
         render_stats()
 
