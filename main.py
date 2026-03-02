@@ -156,9 +156,7 @@ def apply_theme():
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
 if 'players' not in st.session_state:
-    st.session_state.players = []
-if 'add_player_clicked' not in st.session_state:
-    st.session_state.add_player_clicked = False
+    st.session_state.players = []  # Each: {name, hands, buy_in, stack}
 if 'current_session_id' not in st.session_state:
     st.session_state.current_session_id = None
 
@@ -265,57 +263,147 @@ def add_player():
         st.session_state.input_final = 0
 
 def render_player_input():
-    """Render player input form - simplified version"""
-    st.subheader("👥 Add Players")
+    """Render player input - table style like reference image"""
+    st.subheader("🃏 德扑记账")
     
-    # Create a container for the input row
-    container = st.container()
+    # Top section: Global buy-in amount + Add player button
+    col1, col2 = st.columns([1, 1])
     
-    with container:
-        col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+    with col1:
+        global_buy_in = st.number_input(
+            "买入金额 (Buy-in)", 
+            min_value=0.0, 
+            value=1000.0, 
+            step=100.0,
+            key="global_buy_in"
+        )
+    
+    with col2:
+        # Add new player button
+        new_name = st.text_input(
+            "新玩家昵称", 
+            placeholder="输入昵称...", 
+            key="new_player_name",
+            label_visibility="collapsed"
+        )
+        if st.button("➕ 新人上桌", type="primary", use_container_width=True):
+            if new_name and new_name.strip():
+                st.session_state.players.append({
+                    'name': new_name.strip(),
+                    'hands': 1,
+                    'stack': float(global_buy_in),
+                    'buy_in': float(global_buy_in)
+                })
+                st.rerun()
+    
+    st.caption("点击昵称和码量可进行修改，牌局结束后输入每人剩余码量将自动计算盈亏。")
+    st.divider()
+    
+    # Main table - Player list
+    if not st.session_state.players:
+        st.info("暂无玩家，点击上方按钮添加")
+    else:
+        # Table header
+        cols = st.columns([2, 2, 2, 2, 1])
+        with cols[0]:
+            st.markdown("**昵称**")
+        with cols[1]:
+            st.markdown("**手数**")
+        with cols[2]:
+            st.markdown("**码量**")
+        with cols[3]:
+            st.markdown("**盈亏**")
+        with cols[4]:
+            st.markdown("")
         
-        with col1:
-            # Use a unique key with timestamp to force refresh
-            name_input = st.text_input(
-                "Player Name", 
-                key=f"name_input_{len(st.session_state.players)}",
-                placeholder="Enter player name..."
-            )
-        with col2:
-            buy_in_input = st.number_input(
-                "Buy-in (chips)", 
-                min_value=0.0, 
-                value=1000.0, 
-                step=100.0,
-                key=f"buyin_input_{len(st.session_state.players)}"
-            )
-        with col3:
-            final_input = st.number_input(
-                "Final Stack (chips)", 
-                min_value=0.0, 
-                value=0.0, 
-                step=100.0,
-                key=f"final_input_{len(st.session_state.players)}"
-            )
-        with col4:
-            st.write("")  
-            st.write("")
-            add_clicked = st.button("➕ Add", key="add_player_btn")
+        # Player rows
+        total_up = 0  # Total profit
+        total_down = 0  # Total loss
+        
+        for i, p in enumerate(st.session_state.players):
+            cols = st.columns([2, 2, 2, 2, 1])
+            
+            with cols[0]:
+                # Editable name
+                new_name = st.text_input(
+                    "", 
+                    value=p['name'], 
+                    key=f"name_{i}",
+                    label_visibility="collapsed"
+                )
+                p['name'] = new_name
+            
+            with cols[1]:
+                # Hands count with +/- buttons
+                c1, c2, c3 = st.columns([1, 2, 1])
+                with c1:
+                    if st.button("➖", key=f"dec_{i}"):
+                        if p['hands'] > 1:
+                            p['hands'] -= 1
+                            p['buy_in'] = p['hands'] * global_buy_in
+                            st.rerun()
+                with c2:
+                    p['hands'] = st.number_input(
+                        "", 
+                        min_value=1, 
+                        value=p['hands'], 
+                        key=f"hands_{i}",
+                        label_visibility="collapsed"
+                    )
+                    p['buy_in'] = p['hands'] * global_buy_in
+                with c3:
+                    if st.button("➕", key=f"inc_{i}"):
+                        p['hands'] += 1
+                        p['buy_in'] = p['hands'] * global_buy_in
+                        st.rerun()
+            
+            with cols[2]:
+                # Stack amount (editable)
+                p['stack'] = st.number_input(
+                    "", 
+                    min_value=0.0, 
+                    value=float(p.get('stack', p['buy_in'])), 
+                    step=100.0,
+                    key=f"stack_{i}",
+                    label_visibility="collapsed"
+                )
+            
+            with cols[3]:
+                # P&L calculation
+                pnl = p['stack'] - p['buy_in']
+                if pnl >= 0:
+                    st.markdown(f"<span style='color:#f6465d'>+{pnl:,.0f}</span>", unsafe_allow_html=True)
+                    total_up += pnl
+                else:
+                    st.markdown(f"<span style='color:#0b8a4e'>{pnl:,.0f}</span>", unsafe_allow_html=True)
+                    total_down += pnl
+            
+            with cols[4]:
+                # Delete button
+                if st.button("🗑️", key=f"del_{i}"):
+                    st.session_state.players.pop(i)
+                    st.rerun()
+        
+        st.divider()
+        
+        # Bottom: Totals
+        cols = st.columns(3)
+        with cols[0]:
+            st.metric("总水上", f"{total_up:,.0f}")
+        with cols[1]:
+            st.metric("总水下", f"{total_down:,.0f}")
+        with cols[2]:
+            balance = total_up + total_down
+            if abs(balance) < 1:
+                st.success("✅ 账平")
+            else:
+                st.error(f"❌ 账不平: {balance:,.0f}")
+        
+        # Data saved note
+        st.caption("💾 数据已本地保存，关闭应用不会丢失")
     
-    # Handle add button click
-    if add_clicked and name_input:
-        if name_input.strip():
-            st.session_state.players.append({
-                'name': name_input.strip(),
-                'buy_in': float(buy_in_input),
-                'final': float(final_input)
-            })
-            st.rerun()
-        else:
-            st.error("Please enter a player name!")
-    
-    # Show current count
-    st.caption(f"Current players: {len(st.session_state.players)}")
+    # Debug info
+    st.caption(f"Players in memory: {len(st.session_state.players)}")
 
 def render_current_players():
     """Render current players list"""
