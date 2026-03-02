@@ -173,10 +173,11 @@ def save_session(date, location, notes, players_data):
     
     # Insert players
     for p in players_data:
+        final_chips = p.get('stack', p.get('final', 0))
         c.execute("""
             INSERT INTO session_players (session_id, player_name, buy_in_chips, final_chips)
             VALUES (?, ?, ?, ?)
-        """, (session_id, p['name'], p['buy_in'], p['final']))
+        """, (session_id, p['name'], p['buy_in'], final_chips))
     
     conn.commit()
     conn.close()
@@ -214,8 +215,9 @@ def calculate_pnl(players_data):
     results = []
     
     for p in players_data:
-        buy_in = float(p['buy_in']) if p['buy_in'] else 0
-        final = float(p['final']) if p['final'] else 0
+        buy_in = float(p.get('buy_in', 0))
+        # Use 'stack' (new) or 'final' (legacy)
+        final = float(p.get('stack', p.get('final', 0)))
         pnl = final - buy_in
         results.append({
             'Player': p['name'],
@@ -465,7 +467,14 @@ def render_session_form():
     st.divider()
     
     if st.session_state.players:
-        if st.button("💾 Save Session", type="primary", use_container_width=True):
+        # Confirmation checkbox
+        confirm = st.checkbox("我确认要保存会话（这将清除当前输入）", key="confirm_save")
+        
+        if st.button("💾 Save Session", type="primary", use_container_width=True, disabled=not confirm):
+            if not confirm:
+                st.warning("请先勾选确认框")
+                return
+            
             # Validate
             df, is_balanced, discrepancy = calculate_pnl(st.session_state.players)
             
@@ -481,6 +490,14 @@ def render_session_form():
                     notes,
                     st.session_state.players
                 )
+                st.success(f"✅ Session saved! (ID: {session_id})")
+                # Reset
+                st.session_state.players = []
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error saving: {e}")
+    else:
+        st.info("Add players to save a session")
                 st.success(f"✅ Session saved! (ID: {session_id})")
                 # Reset
                 st.session_state.players = []
