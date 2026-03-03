@@ -90,6 +90,7 @@
         
         .player-edit-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr; gap: 5px; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: center; }
         .player-edit-row input { padding: 8px; font-size: 13px; }
+        .player-edit-row .even { color: var(--gold); }
         
         .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
         .btn-save-changes { flex: 1; padding: 12px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -108,8 +109,9 @@
         .chart-filter { margin-bottom: 10px; }
         .chart-filter select { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
         
-        .line-chart { width: 100%; height: 180px; position: relative; padding-top: 20px; }
+        .line-chart { width: 100%; height: 200px; position: relative; padding-top: 10px; }
         .line-chart svg { width: 100%; height: 100%; }
+        .line-chart { position: relative; }
         
         .player-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .mini-stat { background: var(--card); padding: 10px; border-radius: 6px; text-align: center; }
@@ -722,12 +724,23 @@
         
         function renderEditPlayers(players) {
             let html = '';
+            let totalUp = 0, totalDown = 0;
+            
             players.forEach((p, i) => {
                 const pnl = p.stack - p.buyIn;
+                if (pnl >= 0) totalUp += pnl;
+                else totalDown += Math.abs(pnl);
                 const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                 const pnlPrefix = pnl >= 0 ? '+' : '';
-                html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><div style="text-align:center">${p.buyIn || 0}</div><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
+                html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><input type="number" value="${p.buyIn || 0}" id="editBuyIn_${i}"><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
             });
+            
+            // Add total net row
+            const net = totalUp - totalDown;
+            const netClass = Math.abs(net) < 1 ? 'even' : (net >= 0 ? 'positive' : 'negative');
+            const netText = Math.abs(net) < 1 ? '✅ EVEN' : (net >= 0 ? `+${Math.round(net)}` : Math.round(net));
+            html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>Total</div><div>${Math.round(totalUp + totalDown).toLocaleString()}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
+            
             html += '<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">➕ Add Player</button>';
             document.getElementById('editPlayersList').innerHTML = html;
         }
@@ -751,16 +764,16 @@
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
             
-            // Check if table is balanced - keep existing buyIn, only update name and stack
+            // Check if table is balanced - update name, buyIn, and stack
             session.players.forEach((p, i) => { 
                 p.name = document.getElementById('editName_' + i).value; 
+                p.buyIn = parseFloat(document.getElementById('editBuyIn_' + i).value) || 0;
                 p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0;
-                // Don't recalculate buyIn - keep existing value
             });
             
             let totalUp = 0, totalDown = 0;
-            session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += pnl; });
-            const net = totalUp + totalDown;
+            session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += Math.abs(pnl); });
+            const net = totalUp - totalDown;
             
             if (Math.abs(net) >= 1) {
                 alert('Cannot save: Table must be balanced! Current net: ' + net);
@@ -768,7 +781,7 @@
             }
             
             session.date = document.getElementById('editDate').value;
-            session.totalUp = totalUp; session.totalDown = totalDown; session.net = net;
+            session.totalUp = totalUp; session.totalDown = -totalDown; session.net = net;
             
             // Save to cloud
             saveSessionToCloud(session);
@@ -898,15 +911,10 @@
                 <div class="line-chart" id="pnlChart"></div>
             </div>`;
             
-            // Bar chart
-            html += `<div class="chart-container"><div class="chart-title">📊 P&L by Player</div><div class="bar-chart">`;
+            // Player stats table only
+            html += '<div class="player-stats"><h3>🏆 Player Performance (Click to view)</h3><div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div></div>';
             
             const sortedPlayers = Object.entries(playerStats).sort((a, b) => b[1].net - a[1].net);
-            const maxNet = Math.max(...sortedPlayers.map(p => Math.abs(p[1].net)), 1);
-            
-            sortedPlayers.forEach(([name, stats]) => { const height = (Math.abs(stats.net) / maxNet) * 100; html += `<div class="bar"><div class="bar-value">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net)}</div><div class="bar-fill ${stats.net >= 0 ? 'positive' : 'negative'}" style="height: ${height}%;"></div><div class="bar-label">${name}</div></div>`; });
-            
-            html += '</div></div><div class="player-stats"><h3>🏆 Player Performance (Click to view)</h3><div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div></div>';
             
             sortedPlayers.forEach(([name, stats]) => { 
                 const winRate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
@@ -947,17 +955,24 @@
             
             if (chartData.length === 0) { container.innerHTML = '<div class="empty">No data</div>'; return; }
             
-            // SVG line chart - HighRoll style
-            const width = container.clientWidth || 300;
-            const height = 180;
-            const padding = 40;
+            // Better SVG chart with hover tooltips
+            const width = container.clientWidth || 350;
+            const height = 200;
+            const padding = { top: 20, right: 20, bottom: 40, left: 60 };
             
             const minCum = Math.min(...chartData.map(d => d.cumulative), 0);
             const maxCum = Math.max(...chartData.map(d => d.cumulative), 0);
-            const range = maxCum - minCum || 1;
+            // Add padding to range
+            const range = (maxCum - minCum) || 1;
+            const yMin = minCum - range * 0.1;
+            const yMax = maxCum + range * 0.1;
+            const yRange = yMax - yMin;
             
-            const getX = (i) => padding + (i / (chartData.length - 1 || 1)) * (width - 2 * padding);
-            const getY = (val) => height - padding - ((val - minCum) / range) * (height - 2 * padding);
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            const getX = (i) => padding.left + (i / (chartData.length - 1 || 1)) * chartWidth;
+            const getY = (val) => padding.top + chartHeight - ((val - yMin) / yRange) * chartHeight;
             
             let pathD = '';
             chartData.forEach((d, i) => {
@@ -968,38 +983,72 @@
             
             const isPositive = chartData[chartData.length - 1]?.cumulative >= 0;
             const lineColor = isPositive ? '#f6465d' : '#0b8a4e';
-            const fillColor = isPositive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(11, 138, 78, 0.1)';
+            const fillColor = isPositive ? 'rgba(246, 70, 93, 0.15)' : 'rgba(11, 138, 78, 0.15)';
             
-            // Create area fill
+            // Area fill
             let areaD = pathD + ` L${getX(chartData.length - 1)},${getY(0)} L${getX(0)},${getY(0)} Z`;
             
-            // Create dots and labels
-            let dots = '';
-            let labels = '';
+            // Grid lines
+            let gridLines = '';
+            const numGridLines = 5;
+            for (let i = 0; i <= numGridLines; i++) {
+                const y = padding.top + (i / numGridLines) * chartHeight;
+                const val = yMax - (i / numGridLines) * yRange;
+                gridLines += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#2a2e39" stroke-dasharray="3"/>`;
+                gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" fill="#848e9c" font-size="10">${val >= 0 ? '+' : ''}${Math.round(val/1000)}k</text>`;
+            }
+            
+            // X-axis labels
+            let xLabels = '';
             chartData.forEach((d, i) => {
-                if (i === 0 || i === chartData.length - 1 || i === Math.floor(chartData.length / 2)) {
-                    const x = getX(i);
-                    const y = getY(d.cumulative);
-                    dots += `<circle cx="${x}" cy="${y}" r="4" fill="${lineColor}"/>`;
-                    labels += `<text x="${x}" y="${height - 10}" text-anchor="middle" fill="#848e9c" font-size="10">${d.date.slice(5)}</text>`;
+                if (chartData.length <= 5 || i === 0 || i === chartData.length - 1 || i === Math.floor(chartData.length / 2)) {
+                    xLabels += `<text x="${getX(i)}" y="${height - 10}" text-anchor="middle" fill="#848e9c" font-size="10">${d.date.slice(5)}</text>`;
                 }
             });
             
-            // Y-axis labels
-            const yLabels = `
-                <text x="${padding - 5}" y="${getY(maxCum)}" text-anchor="end" fill="#848e9c" font-size="10">+${(maxCum/1000).toFixed(0)}k</text>
-                <text x="${padding - 5}" y="${getY(0)}" text-anchor="end" fill="#848e9c" font-size="10">0</text>
-                <text x="${padding - 5}" y="${getY(minCum)}" text-anchor="end" fill="#848e9c" font-size="10">${(minCum/1000).toFixed(0)}k</text>
-            `;
+            // Hover dots with tooltips
+            let hoverElements = '';
+            chartData.forEach((d, i) => {
+                const x = getX(i);
+                const y = getY(d.cumulative);
+                hoverElements += `<circle class="chart-dot" cx="${x}" cy="${y}" r="6" fill="${lineColor}" opacity="0" 
+                    onmouseover="showTooltip(event, '${d.date}', ${d.cumulative})" 
+                    onmouseout="hideTooltip()"/>`;
+            });
             
-            container.innerHTML = `<svg viewBox="0 0 ${width} ${height}">
-                <line x1="${padding}" y1="${getY(0)}" x2="${width - padding}" y2="${getY(0)}" stroke="#2a2e39" stroke-width="1"/>
-                <path d="${areaD}" fill="${fillColor}"/>
-                <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="2.5"/>
-                ${dots}
-                ${labels}
-                ${yLabels}
-            </svg>`;
+            container.innerHTML = `
+                <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:100%;">
+                    ${gridLines}
+                    <line x1="${padding.left}" y1="${getY(0)}" x2="${width - padding.right}" y2="${getY(0)}" stroke="#4a5568" stroke-width="1"/>
+                    <path d="${areaD}" fill="${fillColor}"/>
+                    <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    ${chartData.map((d, i) => `<circle cx="${getX(i)}" cy="${getY(d.cumulative)}" r="4" fill="${lineColor}"/>`).join('')}
+                    ${xLabels}
+                </svg>
+                <div id="chartTooltip" style="position:absolute;background:#1a1d29;border:1px solid #4a5568;border-radius:6px;padding:8px 12px;font-size:12px;color:#eaecef;pointer-events:none;display:none;z-index:100;">
+                    <div id="tooltipDate" style="color:#848e9c;"></div>
+                    <div id="tooltipValue" style="font-weight:bold;font-size:14px;"></div>
+                </div>
+            `;
+        }
+        
+        function showTooltip(event, date, value) {
+            const tooltip = document.getElementById('chartTooltip');
+            const tooltipDate = document.getElementById('tooltipDate');
+            const tooltipValue = document.getElementById('tooltipValue');
+            
+            tooltipDate.textContent = date;
+            tooltipValue.textContent = (value >= 0 ? '+' : '') + value.toLocaleString();
+            tooltipValue.style.color = value >= 0 ? '#f6465d' : '#0b8a4e';
+            
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.offsetX + 10) + 'px';
+            tooltip.style.top = (event.offsetY - 40) + 'px';
+        }
+        
+        function hideTooltip() {
+            const tooltip = document.getElementById('chartTooltip');
+            if (tooltip) tooltip.style.display = 'none';
         }
         
         function showPlayerDetail(playerName) {
