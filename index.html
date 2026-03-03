@@ -103,6 +103,11 @@
         
         .chart-container { padding: 15px; background: var(--card); margin: 10px 15px; border-radius: 8px; }
         .chart-title { color: var(--gold); margin-bottom: 10px; font-size: 14px; }
+        .chart-filter { margin-bottom: 10px; }
+        .chart-filter select { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        
+        .line-chart { width: 100%; height: 150px; position: relative; padding-top: 20px; }
+        .line-chart svg { width: 100%; height: 100%; }
         
         .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 150px; padding-top: 20px; }
         .bar { flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -153,7 +158,7 @@
             
             <div class="table-header">
                 <div>Name</div>
-                <div style="text-align:center">Hands</div>
+                <div style="text-align:center">Buy-in</div>
                 <div style="text-align:right">Stack</div>
                 <div style="text-align:right">P&L</div>
                 <div></div>
@@ -193,7 +198,7 @@
             </div>
             <div class="table-header" style="border-radius: 8px 8px 0 0;">
                 <div>Name</div>
-                <div style="text-align:center">Hands</div>
+                <div style="text-align:center">Buy-in</div>
                 <div style="text-align:right">Stack</div>
                 <div style="text-align:right">P&L</div>
                 <div></div>
@@ -411,24 +416,66 @@
             if (sessions.length === 0) { statsDiv.innerHTML = '<div class="empty">No data yet. Play some sessions!</div>'; return; }
             
             const playerStats = {};
-            let totalSessions = sessions.length, totalBuyIn = 0, totalFinal = 0, highestSessionWin = 0, highestSessionWinName = '';
+            let totalSessions = sessions.length, totalBuyIn = 0, totalFinal = 0, highestSessionWin = 0, highestSessionWinName = '', highestSessionLoss = 0, highestSessionLossName = '';
             
             sessions.forEach(session => {
                 session.players.forEach(p => {
                     const pnl = p.stack - p.buyIn;
                     if (pnl > highestSessionWin) { highestSessionWin = pnl; highestSessionWinName = p.name; }
-                    if (!playerStats[p.name]) playerStats[p.name] = { buyIn: 0, final: 0, sessions: 0, net: 0 };
+                    if (pnl < highestSessionLoss) { highestSessionLoss = pnl; highestSessionLossName = p.name; }
+                    if (!playerStats[p.name]) playerStats[p.name] = { buyIn: 0, final: 0, sessions: 0, net: 0, winStreak: 0, currentStreak: 0 };
                     playerStats[p.name].buyIn += p.buyIn; playerStats[p.name].final += p.stack; playerStats[p.name].sessions += 1; playerStats[p.name].net += pnl;
                     totalBuyIn += p.buyIn; totalFinal += p.stack;
                 });
             });
+            
+            // Calculate win streaks for each player
+            Object.keys(playerStats).forEach(playerName => {
+                let maxStreak = 0, currentStreak = 0;
+                sessions.forEach(session => {
+                    const player = session.players.find(p => p.name === playerName);
+                    if (player) {
+                        const pnl = player.stack - player.buyIn;
+                        if (pnl > 0) { currentStreak++; if (currentStreak > maxStreak) maxStreak = currentStreak; }
+                        else { currentStreak = 0; }
+                    }
+                });
+                playerStats[playerName].winStreak = maxStreak;
+            });
+            
+            // Find longest win streak
+            let longestWinStreak = { name: '', count: 0 };
+            Object.entries(playerStats).forEach(([name, stats]) => { if (stats.winStreak > longestWinStreak.count) longestWinStreak = { name, count: stats.winStreak }; });
             
             const avgBuyInPerSession = totalBuyIn / totalSessions;
             
             let highestWinner = { name: '', net: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => { if (stats.net > highestWinner.net) highestWinner = { name, net: stats.net }; });
             
-            let html = `<div class="stats-summary"><div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div><div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div><div class="stat-card"><div class="label">Avg Buy-in/Session</div><div class="value">${Math.round(avgBuyInPerSession).toLocaleString()}</div></div><div class="stat-card"><div class="label">Highest Session Win</div><div class="value positive">${highestSessionWinName ? highestSessionWinName + ': +' + Math.round(highestSessionWin).toLocaleString() : '-'}</div></div><div class="stat-card full"><div class="label">Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div></div><div class="chart-container"><div class="chart-title">📊 P&L by Player</div><div class="bar-chart">`;
+            let html = `<div class="stats-summary">
+                <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
+                <div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div>
+                <div class="stat-card"><div class="label">Avg Buy-in/Session</div><div class="value">${Math.round(avgBuyInPerSession).toLocaleString()}</div></div>
+                <div class="stat-card"><div class="label">Highest Session Win</div><div class="value positive">${highestSessionWinName ? highestSessionWinName + ': +' + Math.round(highestSessionWin).toLocaleString() : '-'}</div></div>
+                <div class="stat-card"><div class="label">🏆 Longest Win Streak</div><div class="value">${longestWinStreak.name ? longestWinStreak.name + ' (' + longestWinStreak.count + ' sessions)' : '-'}</div></div>
+                <div class="stat-card"><div class="label">📉 Highest Loss (Session)</div><div class="value negative">${highestSessionLossName ? highestSessionLossName + ': ' + Math.round(highestSessionLoss).toLocaleString() : '-'}</div></div>
+                <div class="stat-card full"><div class="label">Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
+            </div>`;
+            
+            // P&L Over Time Chart with filter
+            const playerNames = ['All Players', ...Object.keys(playerStats).sort()];
+            html += `<div class="chart-container">
+                <div class="chart-title">📈 P&L Over Time</div>
+                <div class="chart-filter">
+                    <select id="playerFilter" onchange="renderPnLChart()">
+                        ${playerNames.map(name => `<option value="${name}">${name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="line-chart" id="pnlChart"></div>
+            </div>`;
+            
+            // Bar chart
+            html += `<div class="chart-container"><div class="chart-title">📊 P&L by Player</div><div class="bar-chart">`;
             
             const sortedPlayers = Object.entries(playerStats).sort((a, b) => b[1].net - a[1].net);
             const maxNet = Math.max(...sortedPlayers.map(p => Math.abs(p[1].net)), 1);
@@ -441,6 +488,71 @@
             
             html += '</div>';
             statsDiv.innerHTML = html;
+            
+            // Render the line chart after HTML is set
+            setTimeout(renderPnLChart, 0);
+        }
+        
+        function renderPnLChart() {
+            const container = document.getElementById('pnlChart');
+            if (!container) return;
+            
+            const selectedPlayer = document.getElementById('playerFilter')?.value || 'All Players';
+            
+            // Build cumulative P&L data
+            const sortedSessions = [...sessions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            let cumulative = 0;
+            const chartData = [];
+            
+            sortedSessions.forEach(session => {
+                let sessionPnl = 0;
+                if (selectedPlayer === 'All Players') {
+                    session.players.forEach(p => { sessionPnl += (p.stack - p.buyIn); });
+                } else {
+                    const player = session.players.find(p => p.name === selectedPlayer);
+                    if (player) sessionPnl = player.stack - player.buyIn;
+                }
+                cumulative += sessionPnl;
+                chartData.push({ date: session.date, pnl: sessionPnl, cumulative });
+            });
+            
+            if (chartData.length === 0) { container.innerHTML = '<div class="empty">No data</div>'; return; }
+            
+            // Simple SVG line chart
+            const width = container.clientWidth || 300;
+            const height = 150;
+            const padding = 30;
+            
+            const minCum = Math.min(...chartData.map(d => d.cumulative), 0);
+            const maxCum = Math.max(...chartData.map(d => d.cumulative), 0);
+            const range = maxCum - minCum || 1;
+            
+            const getX = (i) => padding + (i / (chartData.length - 1 || 1)) * (width - 2 * padding);
+            const getY = (val) => height - padding - ((val - minCum) / range) * (height - 2 * padding);
+            
+            let pathD = '';
+            chartData.forEach((d, i) => {
+                const x = getX(i);
+                const y = getY(d.cumulative);
+                pathD += (i === 0 ? 'M' : 'L') + x + ',' + y;
+            });
+            
+            const isPositive = chartData[chartData.length - 1]?.cumulative >= 0;
+            const lineColor = isPositive ? '#f6465d' : '#0b8a4e';
+            
+            // Create dots
+            let dots = '';
+            chartData.forEach((d, i) => {
+                const x = getX(i);
+                const y = getY(d.cumulative);
+                dots += `<circle cx="${x}" cy="${y}" r="4" fill="${lineColor}"/>`;
+            });
+            
+            container.innerHTML = `<svg viewBox="0 0 ${width} ${height}">
+                <line x1="${padding}" y1="${getY(0)}" x2="${width - padding}" y2="${getY(0)}" stroke="#2a2e39" stroke-dasharray="4"/>
+                <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="2"/>
+                ${dots}
+            </svg>`;
         }
         
         function showPlayerDetail(playerName) {
@@ -460,7 +572,7 @@
             document.getElementById('playerTotalNet').className = 'value ' + (totalNet >= 0 ? 'positive' : 'negative');
             
             let html = '';
-            playerSessions.forEach(s => { const pnlClass = s.pnl >= 0 ? 'positive' : 'negative'; const pnlPrefix = s.pnl >= 0 ? '+' : ''; html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>Hands: ${s.hands}</div><div>Buy-in: ${Math.round(s.buyIn).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`; });
+            playerSessions.forEach(s => { const pnlClass = s.pnl >= 0 ? 'positive' : 'negative'; const pnlPrefix = s.pnl >= 0 ? '+' : ''; html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>Buy-in: ${Math.round(s.buyIn).toLocaleString()}</div><div>Stack: ${Math.round(s.final).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`; });
             document.getElementById('playerSessionsList').innerHTML = html || '<div class="empty">No sessions</div>';
             document.getElementById('playerModal').classList.add('active');
         }
