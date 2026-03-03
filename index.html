@@ -686,12 +686,15 @@
             }
             
             const communitySessions = getCommunitySessions();
+            console.log('Rendering history, sessions:', communitySessions.length);
+            
             if (communitySessions.length === 0) { historyList.innerHTML = '<div class="empty">No sessions recorded yet.</div>'; return; }
             let html = '';
-            communitySessions.forEach(session => {
+            communitySessions.forEach((session, idx) => {
                 let biggestWinner = { name: '', pnl: -Infinity };
                 session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl }; });
-                html += `<div class="history-item" onclick="openEditModal(${session.id})"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} players</div></div><div class="history-winner"><div class="label">Biggest Winner</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
+                console.log('Session', idx, 'id:', session.id, 'type:', typeof session.id);
+                html += `<div class="history-item" data-id="${session.id}" onclick="openEditModal('${session.id}')"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} players</div></div><div class="history-winner"><div class="label">Biggest Winner</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
             });
             historyList.innerHTML = html;
         }
