@@ -159,8 +159,14 @@
         
         .import-section { background: var(--card); padding: 20px; border-radius: 8px; margin-top: 20px; }
         .import-section h3 { color: var(--gold); margin-bottom: 15px; }
-        .import-section textarea { width: 100%; height: 150px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 13px; margin-bottom: 10px; }
+        .import-section textarea { width: 100%; height: 80px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 13px; margin-bottom: 10px; }
         .import-section .hint { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+        .import-section input[type="file"] { margin-bottom: 10px; }
+        .import-preview { max-width: 100%; max-height: 150px; border-radius: 8px; margin: 10px 0; display: none; }
+        .import-status { padding: 10px; border-radius: 8px; margin: 10px 0; display: none; }
+        .import-status.loading { background: rgba(240, 185, 11, 0.2); color: var(--gold); display: block; }
+        .import-status.success { background: rgba(11, 138, 78, 0.2); color: #0b8a4e; display: block; }
+        .import-status.error { background: rgba(246, 70, 93, 0.2); color: #f6465d; display: block; }
         
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } }
     </style>
@@ -866,10 +872,12 @@
                     </div>
                     
                     <div class="import-section">
-                        <h3>📥 Import Session</h3>
-                        <p class="hint">Paste JSON to import. Date format: YYYY-MM-DD</p>
-                        <textarea id="importData" placeholder='{"date": "2026-03-01", "players": [{"name": "Player1", "hands": 1, "buyIn": 1000, "stack": 1500}]}'></textarea>
-                        <button class="btn-community" onclick="importSession()">Import Session</button>
+                        <h3>📸 Import from Screenshot</h3>
+                        <p class="hint">Upload a screenshot from poker tracking apps (德扑记账, etc.)</p>
+                        <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()">
+                        <img id="importPreview" class="import-preview" alt="Preview">
+                        <div id="importStatus" class="import-status"></div>
+                        <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn">🔍 Analyze & Import</button>
                     </div>
                 </div>
             `;
@@ -882,31 +890,94 @@
             createCommunity(name);
         }
         
-        function importSession() {
+        let uploadedImageBase64 = null;
+        
+        function handleScreenshotUpload() {
+            const input = document.getElementById('screenshotInput');
+            const preview = document.getElementById('importPreview');
+            const file = input.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageBase64 = e.target.result;
+                    preview.src = uploadedImageBase64;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function analyzeScreenshot() {
+            const status = document.getElementById('importStatus');
+            const btn = document.getElementById('analyzeBtn');
+            
+            if (!uploadedImageBase64) {
+                alert('Please upload a screenshot first');
+                return;
+            }
+            
+            status.className = 'import-status loading';
+            status.textContent = '🔄 Analyzing screenshot... (This feature requires backend AI. For now, please use manual entry.)';
+            btn.disabled = true;
+            
+            // For now, show a message about the AI feature
+            // In production, this would call an AI API endpoint
+            setTimeout(() => {
+                status.className = 'import-status error';
+                status.innerHTML = '⚠️ AI Analysis requires backend setup.<br><br>For now, please manually enter the session data below:';
+                
+                // Show manual entry form
+                showManualEntryForm();
+                
+                btn.disabled = false;
+            }, 2000);
+        }
+        
+        function showManualEntryForm() {
+            const status = document.getElementById('importStatus');
+            const existingForm = document.getElementById('manualEntryForm');
+            if (existingForm) existingForm.remove();
+            
+            const formHtml = `
+                <div id="manualEntryForm" style="margin-top: 15px; padding: 15px; background: var(--bg); border-radius: 8px;">
+                    <h4 style="color: var(--gold); margin-bottom: 10px;">Manual Entry</h4>
+                    <input type="date" id="sessionDate" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); margin-bottom: 10px;">
+                    <textarea id="manualPlayersData" style="width: 100%; height: 100px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 12px; margin-bottom: 10px;" placeholder="Paste player data (one per line):&#10;PlayerName, buyIn, stack&#10;Example:&#10;Johnny Ye, 6000, 5300&#10;Teng, 4000, 4360"></textarea>
+                    <button class="btn-community" onclick="importManualData()">Import Data</button>
+                </div>
+            `;
+            status.insertAdjacentHTML('beforeend', formHtml);
+        }
+        
+        function importManualData() {
+            const date = document.getElementById('sessionDate').value;
+            const dataText = document.getElementById('manualPlayersData').value;
+            
+            if (!date) { alert('Please enter a date'); return; }
+            if (!dataText.trim()) { alert('Please enter player data'); return; }
+            
             try {
-                const importData = document.getElementById('importData').value;
-                if (!importData.trim()) { alert('Please paste JSON data'); return; }
+                const players = [];
+                const lines = dataText.split('\n');
                 
-                const data = JSON.parse(importData);
-                
-                // Validate
-                if (!data.date || !data.players || !Array.isArray(data.players)) {
-                    alert('Invalid format. Required: {"date": "YYYY-MM-DD", "players": [...]}');
-                    return;
-                }
-                
-                // Convert "hands" to "buyIn" if needed (hands * base buy-in)
-                const baseBuyIn = data.baseBuyIn || 1000;
-                data.players.forEach(p => {
-                    if (p.hands && !p.buyIn) {
-                        p.buyIn = p.hands * baseBuyIn;
+                lines.forEach(line => {
+                    const parts = line.split(',').map(s => s.trim());
+                    if (parts.length >= 3) {
+                        const name = parts[0];
+                        const buyIn = parseFloat(parts[1]) || 0;
+                        const stack = parseFloat(parts[2]) || 0;
+                        if (name && (buyIn > 0 || stack > 0)) {
+                            players.push({ name, buyIn, stack, hands: 1 });
+                        }
                     }
-                    if (!p.stack) p.stack = p.buyIn;
                 });
+                
+                if (players.length === 0) { alert('No valid player data found'); return; }
                 
                 // Calculate totals
                 let totalUp = 0, totalDown = 0;
-                data.players.forEach(p => {
+                players.forEach(p => {
                     const pnl = p.stack - p.buyIn;
                     if (pnl >= 0) totalUp += pnl;
                     else totalDown += pnl;
@@ -915,8 +986,8 @@
                 const communitySessions = getCommunitySessions();
                 const session = {
                     id: Date.now(),
-                    date: data.date,
-                    players: data.players,
+                    date: date,
+                    players: players,
                     totalUp,
                     totalDown,
                     net: totalUp + totalDown,
@@ -926,10 +997,18 @@
                 communitySessions.unshift(session);
                 saveCommunitySessions(communitySessions);
                 
-                alert('Session imported successfully!');
-                document.getElementById('importData').value = '';
+                const status = document.getElementById('importStatus');
+                status.className = 'import-status success';
+                status.textContent = `✅ Successfully imported session with ${players.length} players!`;
+                
+                // Reset form
+                document.getElementById('screenshotInput').value = '';
+                document.getElementById('importPreview').style.display = 'none';
+                uploadedImageBase64 = null;
+                
                 renderHistory();
                 renderStats();
+                
             } catch (e) {
                 alert('Error: ' + e.message);
             }
