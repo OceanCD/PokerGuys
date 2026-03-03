@@ -512,6 +512,11 @@
         // Initialize on load
         initSupabase();
         
+        // Fallback function for backward compatibility
+        function getCommunitySessions() {
+            return sessions;
+        }
+        
         function renderCommunitySelector() {
             const nameEl = document.getElementById('communityName');
             if (!nameEl) return;
