@@ -238,6 +238,47 @@ def calculate_pnl(players_data):
     
     return df, is_balanced, discrepancy
 
+def calculate_streaks(all_players, sessions):
+    """Calculate longest winning streak and highest loss for each player"""
+    # Get all sessions with dates
+    sessions_sorted = sessions.sort_values('date')
+    
+    player_streaks = {}
+    player_highest_loss = {}
+    
+    for player_name in all_players['player_name'].unique():
+        player_sessions = all_players[all_players['player_name'] == player_name].copy()
+        player_sessions = player_sessions.merge(sessions_sorted[['id', 'date']], left_on='session_id', right_on='id')
+        player_sessions = player_sessions.sort_values('date')
+        
+        # Calculate winning streak
+        wins = 0
+        max_wins = 0
+        win_streak_player = player_name
+        win_count = 0
+        
+        for _, row in player_sessions.iterrows():
+            if row['P&L'] > 0:
+                wins += 1
+                win_count += 1
+                if wins > max_wins:
+                    max_wins = wins
+                    win_streak_player = player_name
+            else:
+                wins = 0
+        
+        player_streaks[player_name] = {'player': win_streak_player, 'count': max_wins}
+        
+        # Highest loss in a single session
+        losses = player_sessions[player_sessions['P&L'] < 0]
+        if not losses.empty:
+            min_pnl = losses['P&L'].min()
+            player_highest_loss[player_name] = min_pnl
+        else:
+            player_highest_loss[player_name] = 0
+    
+    return player_streaks, player_highest_loss
+
 # ============== UI COMPONENTS ==============
 def render_theme_toggle():
     """Render theme toggle button"""
@@ -288,7 +329,7 @@ def render_player_input():
     # Header row
     c1, c2, c3, c4, c5 = st.columns([3, 1, 1, 2, 1])
     with c1: st.markdown("**Name**")
-    with c2: st.markdown("**Hands**")
+    with c2: st.markdown("**Buy-in**")
     with c3: st.markdown("**Stack**")
     with c4: st.markdown("**P&L**")
     with c5: st.markdown("")
@@ -428,7 +469,9 @@ def render_history():
             
             # Display
             st.dataframe(
-                players[['player_name', 'buy_in_chips', 'final_chips', 'P&L']],
+                players[['player_name', 'buy_in_chips', 'final_chips', 'P&L']].rename(
+                    columns={'player_name': 'Player', 'buy_in_chips': 'Buy-in', 'final_chips': 'Final', 'P&L': 'P&L'}
+                ),
                 hide_index=True,
                 use_container_width=True
             )
@@ -468,6 +511,13 @@ def render_stats():
     # Calculate P&L
     all_players['P&L'] = all_players['final_chips'] - all_players['buy_in_chips']
     
+    # Calculate streaks and highest loss
+    player_streaks, player_highest_loss = calculate_streaks(all_players, sessions)
+    
+    # Find longest winning streak overall
+    best_streak = max(player_streaks.values(), key=lambda x: x['count']) if player_streaks else {'player': 'N/A', 'count': 0}
+    worst_loss = min(player_highest_loss.items(), key=lambda x: x[1]) if player_highest_loss else ('N/A', 0)
+    
     # Summary stats
     col1, col2, col3, col4 = st.columns(4)
     
@@ -482,6 +532,13 @@ def render_stats():
     with col4:
         total_pnl = all_players['P&L'].sum()
         st.metric("Net P&L", f"{total_pnl:+,.0f}", delta_color="normal")
+    
+    # New: Longest Win Streak & Highest Loss
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("🏆 Longest Win Streak", f"{best_streak['count']} sessions", best_streak['player'])
+    with col2:
+        st.metric("📉 Highest Loss (Single Session)", f"{worst_loss[1]:+,.0f}", worst_loss[0])
     
     # Player performance
     st.subheader("🏆 Player Performance")
@@ -500,7 +557,65 @@ def render_stats():
         use_container_width=True
     )
     
-    # Chart
+    # Chart - P&L by player with filter
+    st.subheader("📈 P&L Over Time")
+    
+    # Get unique player names
+    player_names = sorted(all_players['player_name'].unique())
+    
+    # Player filter dropdown
+    selected_player = st.selectbox(
+        "Filter by Player",
+        options=["All Players"] + player_names,
+        index=0
+    )
+    
+    # Filter data based on selection
+    if selected_player != "All Players":
+        filtered_players = all_players[all_players['player_name'] == selected_player].copy()
+    else:
+        filtered_players = all_players.copy()
+    
+    # Merge with session dates
+    filtered_players = filtered_players.merge(
+        sessions[['id', 'date']], 
+        left_on='session_id', 
+        right_on='id'
+    )
+    filtered_players = filtered_players.sort_values('date')
+    
+    # Calculate cumulative P&L
+    if selected_player == "All Players":
+        # Group by date and sum P&L for all players
+        daily_pnl = filtered_players.groupby('date')['P&L'].sum().reset_index()
+        daily_pnl['Cumulative P&L'] = daily_pnl['P&L'].cumsum()
+    else:
+        # For single player, calculate cumulative
+        filtered_players['Cumulative P&L'] = filtered_players['P&L'].cumsum()
+        daily_pnl = filtered_players[['date', 'P&L', 'Cumulative P&L']].copy()
+    
+    # Display chart
+    if len(daily_pnl) > 0:
+        fig = px.line(
+            daily_pnl,
+            x='date',
+            y='Cumulative P&L',
+            title=f"Cumulative P&L Over Time" + (f" - {selected_player}" if selected_player != "All Players" else ""),
+            markers=True
+        )
+        fig.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font_color='#eaecef',
+            xaxis_title="Date",
+            yaxis_title="Cumulative P&L"
+        )
+        fig.update_traces(line_color='#f0b90b', marker=dict(size=8))
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No data to display.")
+    
+    # Bar chart comparison
     if len(player_stats) > 0:
         fig = px.bar(
             player_stats.reset_index(),
