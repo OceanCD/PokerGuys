@@ -697,9 +697,18 @@
         }
         
         function openEditModal(sessionId) {
+            // Debug: show current user info
+            console.log('currentUser:', currentUser);
+            console.log('currentCommunity:', currentCommunity);
+            
             // Check if user is owner
-            if (!currentUser || currentUser.role !== 'owner') {
-                alert('Only the community manager can edit sessions');
+            if (!currentUser) {
+                alert('Please login first');
+                return;
+            }
+            
+            if (currentUser.role !== 'owner') {
+                alert('Only the community manager can edit sessions. Your role: ' + (currentUser.role || 'unknown'));
                 return;
             }
             
