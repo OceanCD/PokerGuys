@@ -877,11 +877,13 @@
             
             const avgBuyInPerSession = totalBuyIn / totalSessions;
             
-            // Find highest win rate player
+            // Find highest win rate player (must have 5+ sessions)
             let highestWinRatePlayer = { name: '', rate: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
-                const rate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
-                if (rate > highestWinRatePlayer.rate) highestWinRatePlayer = { name, rate };
+                if (stats.sessions >= 5) {
+                    const rate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
+                    if (rate > highestWinRatePlayer.rate) highestWinRatePlayer = { name, rate };
+                }
             });
             
             // Find highest buy-in in any session
