@@ -337,6 +337,7 @@
         
         async function loginWithCommunity() {
             const name = document.getElementById('loginName').value.trim();
+            const communityName = document.getElementById('communityName').value.trim();
             const code = document.getElementById('loginCode').value.trim().toUpperCase();
             
             if (!name || !code) { alert('Please enter your name and community code'); return; }
@@ -360,7 +361,10 @@
                         .eq('user_name', name)
                         .single();
                     
-                    if (!existingMember) {
+                    let userRole = 'member';
+                    if (existingMember) {
+                        userRole = existingMember.role || 'member';
+                    } else {
                         // Join as member
                         await supabaseClient
                             .from('community_members')
@@ -368,11 +372,11 @@
                     }
                     
                     currentCommunity = community;
-                    currentUser = { name };
+                    currentUser = { name, role: userRole };
                     
                     // Save to localStorage
                     localStorage.setItem('pokerCommunity', JSON.stringify(community));
-                    localStorage.setItem('pokerUser', JSON.stringify({ name }));
+                    localStorage.setItem('pokerUser', JSON.stringify({ name, role: userRole }));
                     
                     await loadCloudSessions();
                     alert(`Welcome back! Joined community: ${community.name}`);
@@ -380,7 +384,7 @@
                     // Create new community
                     const { data: newCommunity, error: createError } = await supabaseClient
                         .from('communities')
-                        .insert({ name: name + "'s Poker Group", code: code, owner_name: name })
+                        .insert({ name: communityName || (name + "'s Poker Group"), code: code, owner_name: name })
                         .select()
                         .single();
                     
@@ -392,10 +396,10 @@
                         .insert({ community_id: newCommunity.id, user_name: name, role: 'owner' });
                     
                     currentCommunity = newCommunity;
-                    currentUser = { name };
+                    currentUser = { name, role: 'owner' };
                     
                     localStorage.setItem('pokerCommunity', JSON.stringify(newCommunity));
-                    localStorage.setItem('pokerUser', JSON.stringify({ name }));
+                    localStorage.setItem('pokerUser', JSON.stringify({ name, role: 'owner' }));
                     
                     sessions = []; // Start fresh
                     saveToLocalStorage();
@@ -438,12 +442,42 @@
             if (!currentCommunity) {
                 // Fallback to local
                 const communitySessions = getCommunitySessions();
-                communitySessions.unshift(sessionData);
+                if (sessionData.id && sessions.some(s => s.id === sessionData.id)) {
+                    // Update existing
+                    const idx = sessions.findIndex(s => s.id === sessionData.id);
+                    sessions[idx] = sessionData;
+                } else {
+                    communitySessions.unshift(sessionData);
+                }
                 saveCommunitySessions(communitySessions);
                 return;
             }
             
             try {
+                // Check if session already exists in cloud (update) or is new
+                if (sessionData.id && typeof sessionData.id === 'string' && sessionData.id.includes('-')) {
+                    // Update existing session
+                    const { error } = await supabaseClient
+                        .from('sessions')
+                        .update({
+                            date: sessionData.date,
+                            players: sessionData.players,
+                            total_up: sessionData.totalUp,
+                            total_down: sessionData.totalDown,
+                            net: sessionData.net
+                        })
+                        .eq('id', sessionData.id);
+                    
+                    if (error) throw error;
+                    
+                    // Update local
+                    const idx = sessions.findIndex(s => s.id === sessionData.id);
+                    if (idx >= 0) sessions[idx] = sessionData;
+                    saveToLocalStorage();
+                    return;
+                }
+                
+                // Insert new session
                 const { data, error } = await supabaseClient
                     .from('sessions')
                     .insert({
@@ -595,7 +629,6 @@
                 playersList.innerHTML = html;
             }
             renderNetStatus(net);
-            renderTotals(totalUp, totalDown);
         }
         
         function renderNetStatus(net) {
@@ -647,6 +680,12 @@
         }
         
         function openEditModal(sessionId) {
+            // Check if user is owner
+            if (!currentUser || currentUser.role !== 'owner') {
+                alert('Only the community manager can edit sessions');
+                return;
+            }
+            
             editingSessionId = sessionId;
             const session = sessions.find(s => s.id === sessionId);
             if (!session) return;
@@ -686,18 +725,36 @@
         function saveSessionChanges() {
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
-            session.date = document.getElementById('editDate').value;
+            
+            // Check if table is balanced
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
             session.players.forEach((p, i) => { p.name = document.getElementById('editName_' + i).value; p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0; p.buyIn = p.hands * baseBuyIn; });
             let totalUp = 0, totalDown = 0;
             session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += pnl; });
-            session.totalUp = totalUp; session.totalDown = totalDown; session.net = totalUp + totalDown;
-            const communitySessions = getCommunitySessions();
-            saveCommunitySessions(communitySessions);
+            const net = totalUp + totalDown;
+            
+            if (Math.abs(net) >= 1) {
+                alert('Cannot save: Table must be balanced! (Total Up must equal Total Down)');
+                return;
+            }
+            
+            session.date = document.getElementById('editDate').value;
+            session.totalUp = totalUp; session.totalDown = totalDown; session.net = net;
+            
+            // Save to cloud
+            saveSessionToCloud(session);
+            
+            saveToLocalStorage();
             closeModal('sessionModal'); renderHistory(); renderStats(); alert('Changes saved!');
         }
         
         function deleteCurrentSession() {
+            // Check if user is owner
+            if (!currentUser || currentUser.role !== 'owner') {
+                alert('Only the community manager can delete sessions');
+                return;
+            }
+            
             if (!confirm('Are you sure you want to delete this session?')) return;
             const sessionId = editingSessionId;
             
@@ -1000,6 +1057,7 @@
                         
                         <div class="login-form">
                             <input type="text" id="loginName" placeholder="Your Name" value="${localStorage.getItem('pokerUserName') || ''}">
+                            <input type="text" id="communityName" placeholder="Community Name (for new community)">
                             <input type="text" id="loginCode" placeholder="Community Code (6 chars)" maxlength="6" style="text-transform: uppercase;">
                             <button class="btn-login" onclick="loginWithCommunity()">🚀 Join Community</button>
                         </div>
@@ -1011,7 +1069,7 @@
                         
                         <div class="import-section">
                             <h3>📸 Import from Screenshot</h3>
-                            <p class="hint">Upload a screenshot from poker tracking apps (德扑记账, etc.)</p>
+                            <p class="hint">🛠️ Developing - Not ready yet</p>
                             <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()">
                             <img id="importPreview" class="import-preview" alt="Preview">
                             <div id="importStatus" class="import-status"></div>
@@ -1045,7 +1103,7 @@
                         
                         <div class="import-section">
                             <h3>📸 Import from Screenshot</h3>
-                            <p class="hint">Upload a screenshot from poker tracking apps</p>
+                            <p class="hint">🛠️ Developing - Not ready yet</p>
                             <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()">
                             <img id="importPreview" class="import-preview" alt="Preview">
                             <div id="importStatus" class="import-status"></div>
