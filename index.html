@@ -696,20 +696,14 @@
                 let biggestWinner = { name: '', pnl: -Infinity };
                 session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl }; });
                 console.log('Session', idx, 'id:', session.id, 'type:', typeof session.id);
-                html += `<div class="history-item" data-id="${session.id}" onclick="openEditModal('${session.id}')"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} players</div></div><div class="history-winner"><div class="label">Biggest Winner</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
+                html += `<div class="history-item" data-id="${session.id}" onclick="openEditModal('${session.id}', true)"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} players</div></div><div class="history-winner"><div class="label">Biggest Winner</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
             });
             historyList.innerHTML = html;
         }
         
-        function openEditModal(sessionId) {
-            // For now, allow editing if logged in (remove restriction temporarily to test)
-            if (!currentUser) {
-                alert('Please login first');
-                return;
-            }
-            
-            // Simple role check - if role is missing, assume owner for backward compatibility
-            if (currentUser.role && currentUser.role !== 'owner') {
+        function openEditModal(sessionId, viewOnly = false) {
+            // Check if user is owner - only owners can edit
+            if (!viewOnly && currentUser && currentUser.role && currentUser.role !== 'owner') {
                 alert('Only the community manager can edit sessions');
                 return;
             }
@@ -881,26 +875,37 @@
             
             const avgBuyInPerSession = totalBuyIn / totalSessions;
             
+            // Find highest win rate player
+            let highestWinRatePlayer = { name: '', rate: 0 };
+            Object.entries(playerStats).forEach(([name, stats]) => {
+                const rate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
+                if (rate > highestWinRatePlayer.rate) highestWinRatePlayer = { name, rate };
+            });
+            
+            // Find highest buy-in in any session
+            let highestBuyIn = 0;
+            communitySessions.forEach(session => {
+                session.players.forEach(p => {
+                    if (p.buyIn > highestBuyIn) highestBuyIn = p.buyIn;
+                });
+            });
+            
             let highestWinner = { name: '', net: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => { if (stats.net > highestWinner.net) highestWinner = { name, net: stats.net }; });
-            
-            // Overall stats
-            const totalWins = Object.values(playerStats).reduce((sum, p) => sum + p.wins, 0);
-            const totalLosses = Object.values(playerStats).reduce((sum, p) => sum + p.losses, 0);
-            const overallWinRate = totalSessions > 0 ? Math.round((totalWins / totalSessions) * 100) : 0;
             
             let html = `<div class="stats-summary">
                 <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
                 <div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div>
-                <div class="stat-card"><div class="label">Avg Buy-in/Session</div><div class="value">${Math.round(avgBuyInPerSession).toLocaleString()}</div></div>
-                <div class="stat-card"><div class="label">Win Rate</div><div class="value ${overallWinRate >= 50 ? 'positive' : 'negative'}">${overallWinRate}%</div></div>
+                <div class="stat-card"><div class="label">Highest Buy-in</div><div class="value">${highestBuyIn.toLocaleString()}</div></div>
+                <div class="stat-card"><div class="label">🏆 Highest Win Rate</div><div class="value">${highestWinRatePlayer.name ? highestWinRatePlayer.name + ' (' + highestWinRatePlayer.rate + '%)' : '-'}</div></div>
                 <div class="stat-card"><div class="label">🏆 Best Win Streak</div><div class="value">${longestWinStreak.name ? longestWinStreak.name + ' (' + longestWinStreak.count + ')' : '-'}</div></div>
                 <div class="stat-card"><div class="label">📉 Worst Loss Streak</div><div class="value negative">${longestLossStreak.name ? longestLossStreak.name + ' (' + longestLossStreak.count + ')' : '-'}</div></div>
                 <div class="stat-card full"><div class="label">🏆 Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
             </div>`;
             
             // Accumulated Winnings Chart with filter
-            const playerNames = ['All Players', ...Object.keys(playerStats).sort()];
+            // Player dropdown for chart (no "All Players" option)
+            const playerNames = Object.keys(playerStats).sort();
             html += `<div class="chart-container">
                 <div class="chart-title">📈 Accumulated Winnings</div>
                 <div class="chart-filter">
@@ -933,7 +938,7 @@
             const container = document.getElementById('pnlChart');
             if (!container) return;
             
-            const selectedPlayer = document.getElementById('playerFilter')?.value || 'All Players';
+            const selectedPlayer = document.getElementById('playerFilter')?.value || (playerNames.length > 0 ? playerNames[0] : null);
             
             // Build cumulative winnings data
             const communitySessions = getCommunitySessions();
@@ -943,7 +948,7 @@
             
             sortedSessions.forEach(session => {
                 let sessionPnl = 0;
-                if (selectedPlayer === 'All Players') {
+                if (!selectedPlayer) {
                     session.players.forEach(p => { sessionPnl += (p.stack - p.buyIn); });
                 } else {
                     const player = session.players.find(p => p.name === selectedPlayer);
