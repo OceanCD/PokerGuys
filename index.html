@@ -721,13 +721,12 @@
         }
         
         function renderEditPlayers(players) {
-            const baseBuyIn = parseFloat(buyInInput.value) || 1000;
             let html = '';
             players.forEach((p, i) => {
                 const pnl = p.stack - p.buyIn;
                 const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                 const pnlPrefix = pnl >= 0 ? '+' : '';
-                html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><div style="text-align:center">${p.hands}</div><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
+                html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><div style="text-align:center">${p.buyIn || 0}</div><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
             });
             html += '<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">➕ Add Player</button>';
             document.getElementById('editPlayersList').innerHTML = html;
@@ -752,15 +751,19 @@
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
             
-            // Check if table is balanced
-            const baseBuyIn = parseFloat(buyInInput.value) || 1000;
-            session.players.forEach((p, i) => { p.name = document.getElementById('editName_' + i).value; p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0; p.buyIn = p.hands * baseBuyIn; });
+            // Check if table is balanced - keep existing buyIn, only update name and stack
+            session.players.forEach((p, i) => { 
+                p.name = document.getElementById('editName_' + i).value; 
+                p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0;
+                // Don't recalculate buyIn - keep existing value
+            });
+            
             let totalUp = 0, totalDown = 0;
             session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += pnl; });
             const net = totalUp + totalDown;
             
             if (Math.abs(net) >= 1) {
-                alert('Cannot save: Table must be balanced! (Total Up must equal Total Down)');
+                alert('Cannot save: Table must be balanced! Current net: ' + net);
                 return;
             }
             
