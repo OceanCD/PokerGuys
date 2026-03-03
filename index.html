@@ -697,9 +697,8 @@
         }
         
         function openEditModal(sessionId) {
-            // Debug: show current user info
-            console.log('currentUser:', currentUser);
-            console.log('currentCommunity:', currentCommunity);
+            // Debug: show current user info in alert
+            alert('Debug: currentUser = ' + JSON.stringify(currentUser) + '\n\nClick OK to continue.');
             
             // Check if user is owner
             if (!currentUser) {
