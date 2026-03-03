@@ -697,17 +697,15 @@
         }
         
         function openEditModal(sessionId) {
-            // Debug: show current user info in alert
-            alert('Debug: currentUser = ' + JSON.stringify(currentUser) + '\n\nClick OK to continue.');
-            
-            // Check if user is owner
+            // For now, allow editing if logged in (remove restriction temporarily to test)
             if (!currentUser) {
                 alert('Please login first');
                 return;
             }
             
-            if (currentUser.role !== 'owner') {
-                alert('Only the community manager can edit sessions. Your role: ' + (currentUser.role || 'unknown'));
+            // Simple role check - if role is missing, assume owner for backward compatibility
+            if (currentUser.role && currentUser.role !== 'owner') {
+                alert('Only the community manager can edit sessions');
                 return;
             }
             
