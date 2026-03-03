@@ -172,8 +172,8 @@
         .import-section h3 { color: var(--gold); margin-bottom: 15px; }
         .import-section .developing-badge { 
             display: block; 
-            background: #f6465d; 
-            color: white; 
+            background: #f0b90b; 
+            color: #000; 
             padding: 8px 12px; 
             border-radius: 6px; 
             font-weight: bold; 
@@ -906,13 +906,13 @@
             </div>`;
             
             // Accumulated Winnings Chart with filter
-            // Player dropdown for chart (no "All Players" option)
-            const playerNames = Object.keys(playerStats).sort();
+            // Player dropdown - only show players with 3+ sessions
+            const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= 3).sort();
             html += `<div class="chart-container">
                 <div class="chart-title">📈 Accumulated Winnings</div>
                 <div class="chart-filter">
                     <select id="playerFilter" onchange="renderPnLChart()">
-                        ${playerNames.map(name => `<option value="${name}">${name}</option>`).join('')}
+                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${name}">${name} (${playerStats[name].sessions} sessions)</option>`).join('') : '<option value="">No players with 3+ sessions</option>'}
                     </select>
                 </div>
                 <div class="line-chart" id="pnlChart"></div>
@@ -1007,9 +1007,10 @@
             
             // X-axis labels
             let xLabels = '';
+            // Show year-month on X-axis
             chartData.forEach((d, i) => {
                 if (chartData.length <= 5 || i === 0 || i === chartData.length - 1 || i === Math.floor(chartData.length / 2)) {
-                    xLabels += `<text x="${getX(i)}" y="${height - 10}" text-anchor="middle" fill="#848e9c" font-size="10">${d.date.slice(5)}</text>`;
+                    xLabels += `<text x="${getX(i)}" y="${height - 10}" text-anchor="middle" fill="#848e9c" font-size="10">${d.date.slice(0, 7)}</text>`;
                 }
             });
             
@@ -1161,7 +1162,7 @@
                         
                         <div class="import-section">
                             <h3>📸 Import from Screenshot</h3>
-                            <span class="developing-badge">🛠️ Developing - Not Ready Yet</span>
+                            <span class="developing-badge">🛠️ In Progress - Coming Soon</span>
                             <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()">
                             <img id="importPreview" class="import-preview" alt="Preview">
                             <div id="importStatus" class="import-status"></div>
@@ -1195,7 +1196,7 @@
                         
                         <div class="import-section">
                             <h3>📸 Import from Screenshot</h3>
-                            <span class="developing-badge">🛠️ Developing - Not Ready Yet</span>
+                            <span class="developing-badge">🛠️ In Progress - Coming Soon</span>
                             <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()">
                             <img id="importPreview" class="import-preview" alt="Preview">
                             <div id="importStatus" class="import-status"></div>
