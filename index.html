@@ -337,7 +337,7 @@
         
         async function loginWithCommunity() {
             const name = document.getElementById('loginName').value.trim();
-            const communityName = document.getElementById('communityName').value.trim();
+            const communityName = document.getElementById('newCommunityNameInput').value.trim();
             const code = document.getElementById('loginCode').value.trim().toUpperCase();
             
             if (!name || !code) { alert('Please enter your name and community code'); return; }
@@ -668,6 +668,13 @@
         
         function renderHistory() {
             const historyList = document.getElementById('historyList');
+            
+            // Show blank if not logged in
+            if (!currentCommunity) { 
+                historyList.innerHTML = '<div class="empty">Please login to view history</div>'; 
+                return; 
+            }
+            
             const communitySessions = getCommunitySessions();
             if (communitySessions.length === 0) { historyList.innerHTML = '<div class="empty">No sessions recorded yet.</div>'; return; }
             let html = '';
@@ -774,6 +781,13 @@
         
         function renderStats() {
             const statsDiv = document.getElementById('statsContent');
+            
+            // Show blank if not logged in
+            if (!currentCommunity) { 
+                statsDiv.innerHTML = '<div class="empty">Please login to view stats</div>'; 
+                return; 
+            }
+            
             const communitySessions = getCommunitySessions();
             if (communitySessions.length === 0) { statsDiv.innerHTML = '<div class="empty">No data yet. Play some sessions!</div>'; return; }
             
@@ -1057,7 +1071,7 @@
                         
                         <div class="login-form">
                             <input type="text" id="loginName" placeholder="Your Name" value="${localStorage.getItem('pokerUserName') || ''}">
-                            <input type="text" id="communityName" placeholder="Community Name (for new community)">
+                            <input type="text" id="newCommunityNameInput" placeholder="Community Name (for new community)">
                             <input type="text" id="loginCode" placeholder="Community Code (6 chars)" maxlength="6" style="text-transform: uppercase;">
                             <button class="btn-login" onclick="loginWithCommunity()">🚀 Join Community</button>
                         </div>
