@@ -877,10 +877,10 @@
             
             const avgBuyInPerSession = totalBuyIn / totalSessions;
             
-            // Find highest win rate player (must have 5+ sessions)
+            // Find highest win rate player (must have minSessionsFilter+ sessions)
             let highestWinRatePlayer = { name: '', rate: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
-                if (stats.sessions >= 5) {
+                if (stats.sessions >= minSessionsFilter) {
                     const rate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
                     if (rate > highestWinRatePlayer.rate) highestWinRatePlayer = { name, rate };
                 }
@@ -897,6 +897,17 @@
             let highestWinner = { name: '', net: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => { if (stats.net > highestWinner.net) highestWinner = { name, net: stats.net }; });
             
+            // Find highest average P&L per session
+            let highestAvgPnl = { name: '', avg: -Infinity };
+            Object.entries(playerStats).forEach(([name, stats]) => { 
+                const avgPnl = stats.sessions > 0 ? stats.net / stats.sessions : 0;
+                if (avgPnl > highestAvgPnl.avg) highestAvgPnl = { name, avg: avgPnl }; 
+            });
+            
+            // Minimum sessions filter - read from dropdown
+            const minSessionsSelect = document.getElementById('minSessionsFilter');
+            const minSessionsFilter = minSessionsSelect ? parseInt(minSessionsSelect.value) : 5;
+            
             let html = `<div class="stats-summary">
                 <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
                 <div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div>
@@ -904,26 +915,40 @@
                 <div class="stat-card"><div class="label">🏆 Highest Win Rate</div><div class="value">${highestWinRatePlayer.name ? highestWinRatePlayer.name + ' (' + highestWinRatePlayer.rate + '%)' : '-'}</div></div>
                 <div class="stat-card"><div class="label">🏆 Best Win Streak</div><div class="value">${longestWinStreak.name ? longestWinStreak.name + ' (' + longestWinStreak.count + ')' : '-'}</div></div>
                 <div class="stat-card"><div class="label">📉 Worst Loss Streak</div><div class="value negative">${longestLossStreak.name ? longestLossStreak.name + ' (' + longestLossStreak.count + ')' : '-'}</div></div>
+                <div class="stat-card"><div class="label">💰 Highest Avg P&L/Session</div><div class="value ${highestAvgPnl.avg >= 0 ? 'positive' : 'negative'}">${highestAvgPnl.name ? highestAvgPnl.name + ' (' + (highestAvgPnl.avg >= 0 ? '+' : '') + Math.round(highestAvgPnl.avg).toLocaleString() + ')' : '-'}</div></div>
                 <div class="stat-card full"><div class="label">🏆 Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
             </div>`;
             
             // Accumulated Winnings Chart with filter
-            // Player dropdown - only show players with 3+ sessions
-            const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= 3).sort();
+            // Player dropdown - only show players with minSessionsFilter+ sessions
+            const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= minSessionsFilter).sort();
+            
             html += `<div class="chart-container">
                 <div class="chart-title">📈 Accumulated Winnings</div>
                 <div class="chart-filter">
                     <select id="playerFilter" onchange="renderPnLChart()">
-                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${name}">${name} (${playerStats[name].sessions} sessions)</option>`).join('') : '<option value="">No players with 3+ sessions</option>'}
+                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${name}">${name} (${playerStats[name].sessions} sessions)</option>`).join('') : '<option value="">No players with ${minSessionsFilter}+ sessions</option>'}
                     </select>
                 </div>
                 <div class="line-chart" id="pnlChart"></div>
             </div>`;
             
-            // Player stats table only
-            html += '<div class="player-stats"><h3>🏆 Player Performance (Click to view)</h3><div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div></div>';
+            // Player stats table only - with filter toggle
+            html += `<div class="player-stats"><h3>🏆 Player Performance (Click to view)</h3>
+                <div class="chart-filter" style="margin-bottom:10px;">
+                    <label>Minimum Sessions: </label>
+                    <select id="minSessionsFilter" onchange="renderStats()">
+                        <option value="1" ${minSessionsFilter === 1 ? 'selected' : ''}>1+</option>
+                        <option value="3" ${minSessionsFilter === 3 ? 'selected' : ''}>3+</option>
+                        <option value="5" ${minSessionsFilter === 5 ? 'selected' : ''}>5+</option>
+                        <option value="10" ${minSessionsFilter === 10 ? 'selected' : ''}>10+</option>
+                    </select>
+                </div>
+                <div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div></div>`;
             
-            const sortedPlayers = Object.entries(playerStats).sort((a, b) => b[1].net - a[1].net);
+            const sortedPlayers = Object.entries(playerStats)
+                .filter(([name, stats]) => stats.sessions >= minSessionsFilter)
+                .sort((a, b) => b[1].net - a[1].net);
             
             sortedPlayers.forEach(([name, stats]) => { 
                 const winRate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;

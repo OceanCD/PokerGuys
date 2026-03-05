@@ -540,8 +540,20 @@ def render_stats():
     with col2:
         st.metric("📉 Highest Loss (Single Session)", f"{worst_loss[1]:+,.0f}", worst_loss[0])
     
+    # New: Highest Average P&L per Session
+    player_avg_pnl = all_players.groupby('player_name')['P&L'].mean()
+    if not player_avg_pnl.empty:
+        best_avg_player = player_avg_pnl.idxmax()
+        best_avg_pnl = player_avg_pnl.max()
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("💰 Highest Avg P&L/Session", f"{best_avg_pnl:+,.0f}", best_avg_player)
+    
     # Player performance
     st.subheader("🏆 Player Performance")
+    
+    # Filter by minimum sessions
+    min_sessions = st.slider("Minimum Sessions", min_value=1, max_value=20, value=5, key="min_sessions_filter")
     
     player_stats = all_players.groupby('player_name').agg({
         'buy_in_chips': 'sum',
@@ -552,22 +564,26 @@ def render_stats():
     player_stats.columns = ['Total Buy-in', 'Total Final', 'Total P&L', 'Avg P&L', 'Sessions']
     player_stats = player_stats.sort_values('Total P&L', ascending=False)
     
+    # Filter by minimum sessions
+    player_stats_filtered = player_stats[player_stats['Sessions'] >= min_sessions]
+    
     st.dataframe(
-        player_stats,
+        player_stats_filtered,
         use_container_width=True
     )
     
     # Chart - P&L by player with filter
     st.subheader("📈 P&L Over Time")
     
-    # Get unique player names
-    player_names = sorted(all_players['player_name'].unique())
+    # Get unique player names (from filtered stats)
+    player_names = sorted(player_stats_filtered.index.tolist())
     
     # Player filter dropdown
     selected_player = st.selectbox(
         "Filter by Player",
         options=["All Players"] + player_names,
-        index=0
+        index=0,
+        key="player_chart_filter"
     )
     
     # Filter data based on selection
@@ -615,13 +631,13 @@ def render_stats():
     else:
         st.info("No data to display.")
     
-    # Bar chart comparison
-    if len(player_stats) > 0:
+    # Bar chart comparison (use filtered stats)
+    if len(player_stats_filtered) > 0:
         fig = px.bar(
-            player_stats.reset_index(),
+            player_stats_filtered.reset_index(),
             x='player_name',
             y='Total P&L',
-            title="Player P&L Comparison",
+            title="Player P&L Comparison" + (f" (≥{min_sessions} sessions)" if min_sessions > 1 else ""),
             color='Total P&L',
             color_continuous_scale=['#f6465d', '#f0b90b', '#0b8a4e']
         )
