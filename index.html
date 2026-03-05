@@ -811,7 +811,9 @@
         }
         
         function renderStats() {
+            try {
             const statsDiv = document.getElementById('statsContent');
+            if (!statsDiv) return;
             
             // Show blank if not logged in
             if (!currentCommunity) { 
@@ -904,9 +906,12 @@
                 if (avgPnl > highestAvgPnl.avg) highestAvgPnl = { name, avg: avgPnl }; 
             });
             
-            // Minimum sessions filter - read from dropdown
+            // Minimum sessions filter - read from dropdown, default to 5 if not found
+            let minSessionsFilter = 5;
             const minSessionsSelect = document.getElementById('minSessionsFilter');
-            const minSessionsFilter = minSessionsSelect ? parseInt(minSessionsSelect.value) : 5;
+            if (minSessionsSelect) {
+                minSessionsFilter = parseInt(minSessionsSelect.value);
+            }
             
             let html = `<div class="stats-summary">
                 <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
@@ -961,6 +966,11 @@
             
             // Render the line chart after HTML is set
             setTimeout(renderPnLChart, 0);
+            }
+            catch (e) {
+                console.error('Error rendering stats:', e);
+                statsDiv.innerHTML = '<div class="empty">Error loading stats. Please refresh the page.</div>';
+            }
         }
         
         function renderPnLChart() {
