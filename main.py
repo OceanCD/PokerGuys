@@ -8,12 +8,20 @@ import plotly.express as px
 from datetime import datetime
 from pathlib import Path
 import json
+import uuid
 
 # Database
 import sqlite3
 from dataclasses import dataclass
 from typing import List, Optional
 from dateutil import parser
+
+# Supabase (optional - for community features)
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
 
 # Config
 st.set_page_config(
@@ -22,6 +30,373 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# ============== COMMUNITY / LOGIN SYSTEM ==============
+COMMUNITY_INFO = """
+## 🏆 What is a Community?
+
+A **Community** is your poker group — friends, regular players, or club members who play together.
+
+### Features:
+- **Shared Session History** — All members see the same sessions
+- **Player Statistics** — Track performance across all sessions
+- **Community Leaderboard** — See who's winning the most
+
+### How it works:
+1. One person creates a community (becomes the owner)
+2. Gets a **6-character code** (e.g., "DHILLL")
+3. Shares the code with members
+4. Everyone enters the code to join and see the same data
+"""
+
+# Supabase config - can be set via environment or use demo
+SUPABASE_URL = "https://oycwgywdddjfkmvxgaij.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95Y3dneXdkZGprZm1teGdhaWoiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0OTM5OTIwMCwiZXhwIjoxOTY0OTc1MjAwfQ.Uu4hH6fN17L8dK2zD3qZ9h5vY6xR2tW8kM4pL1qN3sM"
+
+def get_supabase_client() -> Optional[Client]:
+    """Get Supabase client if available"""
+    if not SUPABASE_AVAILABLE:
+        return None
+    try:
+        return create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"Supabase connection error: {e}")
+        return None
+
+def init_community_state():
+    """Initialize community-related session state"""
+    if 'community_logged_in' not in st.session_state:
+        st.session_state.community_logged_in = False
+    if 'community_code' not in st.session_state:
+        st.session_state.community_code = None
+    if 'community_name' not in st.session_state:
+        st.session_state.community_name = None
+    if 'user_name' not in st.session_state:
+        st.session_state.user_name = None
+    if 'show_login' not in st.session_state:
+        st.session_state.show_login = True
+
+def render_welcome_modal():
+    """Render the welcome/login modal"""
+    if st.session_state.get('community_logged_in', False):
+        return True
+    
+    # Custom CSS for modal
+    modal_css = """
+    <style>
+    /* Centered login container */
+    .login-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 40px;
+        background: linear-gradient(145deg, #1e2329, #2a2e39);
+        border-radius: 16px;
+        border: 1px solid #3a3f4a;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        text-align: center;
+    }
+    
+    .login-logo {
+        font-size: 60px;
+        margin-bottom: 20px;
+    }
+    
+    .login-title {
+        font-size: 28px;
+        font-weight: bold;
+        color: #f0b90b;
+        margin-bottom: 10px;
+    }
+    
+    .login-subtitle {
+        color: #888;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+    
+    .community-info-box {
+        background: #0b0e11;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .community-info-box h3 {
+        color: #f0b90b !important;
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    
+    .community-info-box ul {
+        color: #aaa;
+        font-size: 13px;
+        padding-left: 20px;
+        line-height: 1.8;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: #555;
+        font-size: 12px;
+    }
+    
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #333;
+    }
+    
+    .divider span {
+        padding: 0 15px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #f0b90b, #d49a0a);
+        color: #000;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 15px;
+        cursor: pointer;
+        width: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3);
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        color: #f0b90b;
+        border: 2px solid #f0b90b;
+        padding: 12px 26px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(240, 185, 11, 0.1);
+    }
+    
+    .input-group {
+        margin-bottom: 15px;
+    }
+    
+    .input-group label {
+        display: block;
+        text-align: left;
+        color: #aaa;
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+    
+    .input-group input {
+        width: 100%;
+        padding: 12px 16px;
+        background: #0b0e11;
+        border: 1px solid #333;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    
+    .input-group input:focus {
+        outline: none;
+        border-color: #f0b90b;
+    }
+    
+    .error-msg {
+        background: rgba(246, 70, 93, 0.1);
+        border: 1px solid #f6465d;
+        color: #f6465d;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        font-size: 13px;
+    }
+    
+    .success-msg {
+        background: rgba(11, 138, 78, 0.1);
+        border: 1px solid #0b8a4e;
+        color: #0b8a4e;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        font-size: 13px;
+    }
+    
+    .back-link {
+        color: #666;
+        font-size: 13px;
+        cursor: pointer;
+        margin-top: 15px;
+        display: inline-block;
+    }
+    
+    .back-link:hover {
+        color: #f0b90b;
+    }
+    
+    /* Hide Streamlit elements in modal */
+    .login-container + div {
+        display: none;
+    }
+    </style>
+    """
+    
+    st.markdown(modal_css, unsafe_allow_html=True)
+    
+    # Initialize login step
+    if 'login_step' not in st.session_state:
+        st.session_state.login_step = 'initial'  # initial, join, create, enter_name
+    
+    # Container for the login UI
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    
+    # Step 1: Initial choice
+    if st.session_state.login_step == 'initial':
+        st.markdown('<div class="login-logo">🃏</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-title">Welcome to PokerGuys</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-subtitle">Track your poker sessions with friends</div>', unsafe_allow_html=True)
+        
+        # Community info (collapsible)
+        with st.expander("ℹ️ What is a Community?"):
+            st.markdown(COMMUNITY_INFO)
+        
+        st.markdown('<div class="divider"><span>GET STARTED</span></div>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🎯 I Have a Code", use_container_width=True, type="primary"):
+                st.session_state.login_step = 'join'
+                st.rerun()
+        with col2:
+            if st.button("✨ Create New Community", use_container_width=True):
+                st.session_state.login_step = 'create'
+                st.rerun()
+    
+    # Step 2: Join existing community
+    elif st.session_state.login_step == 'join':
+        st.markdown('<div class="login-logo">🔗</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-title">Join a Community</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-subtitle">Enter the 6-character code shared by your community</div>', unsafe_allow_html=True)
+        
+        community_code = st.text_input("Community Code", placeholder="e.g., DHILLL", max_chars=10).upper()
+        user_name = st.text_input("Your Name", placeholder="Your nickname").strip()
+        
+        if st.button("Join Community", type="primary", use_container_width=True):
+            if not community_code:
+                st.error("Please enter a community code")
+            elif not user_name:
+                st.error("Please enter your name")
+            else:
+                # Try to join
+                sb = get_supabase_client()
+                if sb:
+                    try:
+                        # Find community by code
+                        result = sb.table('communities').select('*').ilike('code', community_code).execute()
+                        if result.data:
+                            community = result.data[0]
+                            # Add member
+                            try:
+                                sb.table('community_members').insert({
+                                    'community_id': community['id'],
+                                    'user_name': user_name,
+                                    'role': 'member'
+                                }).execute()
+                            except:
+                                pass  # May already be a member
+                            
+                            # Success
+                            st.session_state.community_logged_in = True
+                            st.session_state.community_code = community_code
+                            st.session_state.community_name = community['name']
+                            st.session_state.user_name = user_name
+                            st.session_state.show_login = False
+                            st.rerun()
+                        else:
+                            st.error("❌ Community not found. Check the code and try again.")
+                    except Exception as e:
+                        st.error(f"Error joining community: {e}")
+                else:
+                    st.error("Supabase not available. Please try again later.")
+        
+        st.markdown('<span class="back-link" onclick="history.back()">← Back</span>', unsafe_allow_html=True)
+        if st.button("← Back", key="back_join"):
+            st.session_state.login_step = 'initial'
+            st.rerun()
+    
+    # Step 3: Create new community
+    elif st.session_state.login_step == 'create':
+        st.markdown('<div class="login-logo">🚀</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-title">Create a Community</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-subtitle">Start a new poker group and invite your friends</div>', unsafe_allow_html=True)
+        
+        community_name = st.text_input("Community Name", placeholder="e.g., Friday Night Poker").strip()
+        your_name = st.text_input("Your Name (as owner)", placeholder="Your nickname").strip()
+        
+        if st.button("Create Community", type="primary", use_container_width=True):
+            if not community_name:
+                st.error("Please enter a community name")
+            elif not your_name:
+                st.error("Please enter your name")
+            else:
+                # Generate a simple code
+                import random
+                import string
+                code = ''.join(random.choices(string.ascii_uppercase, k=6))
+                
+                sb = get_supabase_client()
+                if sb:
+                    try:
+                        # Create community
+                        result = sb.table('communities').insert({
+                            'name': community_name,
+                            'code': code,
+                            'owner_name': your_name
+                        }).execute()
+                        
+                        if result.data:
+                            community = result.data[0]
+                            # Add owner as member
+                            sb.table('community_members').insert({
+                                'community_id': community['id'],
+                                'user_name': your_name,
+                                'role': 'owner'
+                            }).execute()
+                            
+                            # Success - show code prominently
+                            st.session_state.community_logged_in = True
+                            st.session_state.community_code = code
+                            st.session_state.community_name = community_name
+                            st.session_state.user_name = your_name
+                            st.session_state.show_login = False
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Error creating community: {e}")
+                else:
+                    st.error("Supabase not available. Please try again later.")
+        
+        if st.button("← Back", key="back_create"):
+            st.session_state.login_step = 'initial'
+            st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Close container
+    
+    return False
 
 # Database setup
 DB_PATH = Path("pokerguys.db")
@@ -651,6 +1026,24 @@ def render_stats():
 # ============== MAIN ==============
 def main():
     """Main app"""
+    # Initialize community/login system
+    init_community_state()
+    
+    # Show welcome modal if not logged in
+    if not st.session_state.get('community_logged_in', False):
+        render_welcome_modal()
+        return
+    
+    # User is logged in - show community info in sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(f"**🏠 {st.session_state.community_name}**")
+    st.sidebar.markdown(f"Code: `{st.session_state.community_code}`")
+    st.sidebar.markdown(f"👤 {st.session_state.user_name}")
+    if st.sidebar.button("Switch Community"):
+        st.session_state.community_logged_in = False
+        st.session_state.login_step = 'initial'
+        st.rerun()
+    
     apply_theme()
     
     # Larger header at top
