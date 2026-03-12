@@ -793,8 +793,29 @@ def render_session_form():
     st.divider()
     
     if st.session_state.players:
-        # Confirmation checkbox
-        confirm = st.checkbox("I confirm to save session (this will clear current inputs)", key="confirm_save")
+        # Confirmation checkbox - styled more prominently
+        st.markdown("""
+        <style>
+        .confirm-box {
+            background: linear-gradient(135deg, #2a2e39, #1e2329);
+            border: 2px solid #f0b90b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .confirm-box label {
+            color: #f0b90b !important;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('<div class="confirm-box">', unsafe_allow_html=True)
+        confirm = st.checkbox("☑️ YES, I confirm to save this session", key="confirm_save", label_visibility="collapsed")
+        st.markdown("*This will clear all current inputs after saving*")
+        st.markdown('</div>', unsafe_allow_html=True)
         
         if st.button("💾 Save Session", type="primary", use_container_width=True, disabled=not confirm):
             if not confirm:
