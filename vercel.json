@@ -1,0 +1,5 @@
+{
+  "buildCommand": "uv pip install -r requirements.txt --system",
+  "outputDirectory": ".",
+  "installCommand": "uv pip install -r requirements.txt --system"
+}
