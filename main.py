@@ -1069,9 +1069,9 @@ def main():
     
     # Larger header at top
     st.markdown("""
-        <div style="text-align: center; padding: 20px 0;">
-            <h1 style="font-size: 3em; margin: 0;">🃏 PokerGuys</h1>
-            <p style="color: #888; margin: 5px 0;">Texas Hold'em Session Tracker</p>
+        <div style="text-align: center; padding: 30px 0;">
+            <h1 style="font-size: 4.5em; margin: 0; font-weight: 800; letter-spacing: 2px;">🃏 PokerGuys</h1>
+            <p style="color: #888; margin: 10px 0; font-size: 1.2em;">Texas Hold'em Session Tracker</p>
         </div>
     """, unsafe_allow_html=True)
     
