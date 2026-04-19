@@ -190,6 +190,54 @@
         .import-status.error { background: rgba(246, 70, 93, 0.2); color: #f6465d; display: block; }
         
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } }
+
+        /* New stats styles */
+        .stats-summary-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 15px 10px; }
+        .stat-card .sub { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+        .stat-card .value.gold { color: var(--gold); }
+
+        .player-stat-row-ext { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr; padding: 10px 10px; border-bottom: 1px solid var(--border); font-size: 12px; cursor: pointer; overflow-x: auto; }
+        .player-stat-row-ext:hover { background: var(--card); }
+        .player-stat-row-ext.header { cursor: default; font-weight: 600; color: var(--gold); font-size: 11px; }
+        .player-stat-row-ext.header:hover { background: transparent; }
+
+        .streak-hot { color: #ff6b35; font-weight: bold; }
+        .streak-cold { color: #4fc3f7; font-weight: bold; }
+        .streak-neutral { color: var(--text-dim); }
+
+        .shark-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .shark-s { background: rgba(240,185,11,0.3); color: var(--gold); }
+        .shark-a { background: rgba(246,70,93,0.2); color: var(--profit); }
+        .shark-b { background: rgba(11,138,78,0.2); color: var(--loss); }
+        .shark-c { background: rgba(132,142,156,0.2); color: var(--text-dim); }
+
+        .h2h-section { padding: 15px; }
+        .h2h-section h3 { color: var(--gold); margin-bottom: 12px; font-size: 16px; }
+        .h2h-selectors { display: flex; gap: 10px; margin-bottom: 12px; }
+        .h2h-selectors select { flex: 1; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        .h2h-result { background: var(--card); border-radius: 8px; padding: 15px; text-align: center; }
+        .h2h-vs { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+        .h2h-player { flex: 1; }
+        .h2h-player .h2h-name { font-weight: bold; font-size: 15px; color: var(--gold); }
+        .h2h-player .h2h-wins { font-size: 28px; font-weight: bold; }
+        .h2h-player .h2h-wins.winner { color: var(--profit); }
+        .h2h-player .h2h-wins.loser { color: var(--loss); }
+        .h2h-divider { font-size: 18px; color: var(--text-dim); }
+        .h2h-meta { font-size: 12px; color: var(--text-dim); }
+
+        .monthly-chart-section { padding: 15px; }
+        .monthly-chart-section h3 { color: var(--gold); margin-bottom: 10px; font-size: 16px; }
+        .monthly-bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-top: 20px; overflow-x: auto; min-width: 0; }
+        .monthly-bar { flex: 0 0 auto; min-width: 36px; display: flex; flex-direction: column; align-items: center; }
+        .monthly-bar-value { font-size: 9px; margin-bottom: 3px; color: var(--text-dim); white-space: nowrap; }
+        .monthly-bar-fill { width: 28px; border-radius: 4px 4px 0 0; min-height: 2px; }
+        .monthly-bar-fill.positive { background: var(--profit); }
+        .monthly-bar-fill.negative { background: var(--loss); transform-origin: bottom; }
+        .monthly-bar-label { font-size: 9px; color: var(--text-dim); margin-top: 4px; text-align: center; white-space: nowrap; }
+        .monthly-zero-line { width: 100%; height: 1px; background: var(--border); margin: 0; }
+
+        .pnl-positive { color: var(--profit); font-weight: bold; }
+        .pnl-negative { color: var(--loss); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -812,91 +860,149 @@
         
         function renderStats() {
             const statsDiv = document.getElementById('statsContent');
-            
+
             // Show blank if not logged in
-            if (!currentCommunity) { 
-                statsDiv.innerHTML = '<div class="empty">Please login to view stats</div>'; 
-                return; 
+            if (!currentCommunity) {
+                statsDiv.innerHTML = '<div class="empty">Please login to view stats</div>';
+                return;
             }
-            
+
             const communitySessions = getCommunitySessions();
             if (communitySessions.length === 0) { statsDiv.innerHTML = '<div class="empty">No data yet. Play some sessions!</div>'; return; }
-            
+
+            // ── Core player stats accumulation ──────────────────────────────────
             const playerStats = {};
-            let totalSessions = communitySessions.length, totalBuyIn = 0, totalFinal = 0, highestSessionWin = 0, highestSessionWinName = '', highestSessionLoss = 0, highestSessionLossName = '';
-            
+            let totalSessions = communitySessions.length;
+            let highestSessionWin = 0, highestSessionWinName = '';
+            let highestSessionLoss = 0, highestSessionLossName = '';
+
             communitySessions.forEach(session => {
+                const sessionPlayerCount = session.players.length;
                 session.players.forEach(p => {
                     const pnl = p.stack - p.buyIn;
                     if (pnl > highestSessionWin) { highestSessionWin = pnl; highestSessionWinName = p.name; }
                     if (pnl < highestSessionLoss) { highestSessionLoss = pnl; highestSessionLossName = p.name; }
-                    if (!playerStats[p.name]) playerStats[p.name] = { buyIn: 0, final: 0, sessions: 0, net: 0, wins: 0, losses: 0, winStreak: 0, maxWinStreak: 0, lossStreak: 0, maxLossStreak: 0 };
-                    playerStats[p.name].buyIn += p.buyIn; 
-                    playerStats[p.name].final += p.stack; 
-                    playerStats[p.name].sessions += 1; 
-                    playerStats[p.name].net += pnl;
-                    if (pnl > 0) { playerStats[p.name].wins++; }
-                    else if (pnl < 0) { playerStats[p.name].losses++; }
-                    totalBuyIn += p.buyIn; totalFinal += p.stack;
+                    if (!playerStats[p.name]) playerStats[p.name] = {
+                        buyIn: 0, final: 0, sessions: 0, net: 0,
+                        wins: 0, losses: 0,
+                        maxWinStreak: 0, maxLossStreak: 0,
+                        currentStreak: 0, currentStreakType: '',
+                        comebackCount: 0,
+                        smallTablePnl: 0, smallTableSessions: 0,
+                        largeTablePnl: 0, largeTableSessions: 0,
+                        sessionPnls: []
+                    };
+                    const ps = playerStats[p.name];
+                    ps.buyIn += p.buyIn;
+                    ps.final += p.stack;
+                    ps.sessions += 1;
+                    ps.net += pnl;
+                    ps.sessionPnls.push(pnl);
+                    if (pnl > 0) ps.wins++;
+                    else if (pnl < 0) ps.losses++;
+                    // Comeback King: hands >= 3 but still won
+                    if ((p.hands || 1) >= 3 && pnl > 0) ps.comebackCount++;
+                    // Session size impact
+                    if (sessionPlayerCount <= 6) { ps.smallTablePnl += pnl; ps.smallTableSessions++; }
+                    else { ps.largeTablePnl += pnl; ps.largeTableSessions++; }
                 });
             });
-            
-            // Calculate streaks for each player
+
+            // ── Streaks (chronological order) ──────────────────────────────────
+            const sortedChron = [...communitySessions].sort((a, b) => new Date(a.date) - new Date(b.date));
             Object.keys(playerStats).forEach(playerName => {
-                let currentWinStreak = 0, maxWinStreak = 0;
-                let currentLossStreak = 0, maxLossStreak = 0;
-                sessions.forEach(session => {
+                let curW = 0, maxW = 0, curL = 0, maxL = 0;
+                let lastStreakType = '', lastStreakCount = 0;
+                sortedChron.forEach(session => {
                     const player = session.players.find(p => p.name === playerName);
                     if (player) {
                         const pnl = player.stack - player.buyIn;
-                        if (pnl > 0) { 
-                            currentWinStreak++; 
-                            if (currentWinStreak > maxWinStreak) maxWinStreak = currentWinStreak;
-                            currentLossStreak = 0;
-                        } else if (pnl < 0) { 
-                            currentLossStreak++; 
-                            if (currentLossStreak > maxLossStreak) maxLossStreak = currentLossStreak;
-                            currentWinStreak = 0;
+                        if (pnl > 0) {
+                            curW++; if (curW > maxW) maxW = curW; curL = 0;
+                            lastStreakType = 'W'; lastStreakCount = curW;
+                        } else if (pnl < 0) {
+                            curL++; if (curL > maxL) maxL = curL; curW = 0;
+                            lastStreakType = 'L'; lastStreakCount = curL;
                         } else {
-                            currentWinStreak = 0;
-                            currentLossStreak = 0;
+                            curW = 0; curL = 0; lastStreakType = ''; lastStreakCount = 0;
                         }
                     }
                 });
-                playerStats[playerName].maxWinStreak = maxWinStreak;
-                playerStats[playerName].maxLossStreak = maxLossStreak;
+                playerStats[playerName].maxWinStreak = maxW;
+                playerStats[playerName].maxLossStreak = maxL;
+                playerStats[playerName].currentStreakType = lastStreakType;
+                playerStats[playerName].currentStreak = lastStreakCount;
             });
-            
-            // Find overall streaks
+
+            // ── Overall streak leaders ──────────────────────────────────────────
             let longestWinStreak = { name: '', count: 0 };
             let longestLossStreak = { name: '', count: 0 };
-            Object.entries(playerStats).forEach(([name, stats]) => { 
-                if (stats.maxWinStreak > longestWinStreak.count) longestWinStreak = { name, count: stats.maxWinStreak }; 
-                if (stats.maxLossStreak > longestLossStreak.count) longestLossStreak = { name, count: stats.maxLossStreak }; 
+            Object.entries(playerStats).forEach(([name, stats]) => {
+                if (stats.maxWinStreak > longestWinStreak.count) longestWinStreak = { name, count: stats.maxWinStreak };
+                if (stats.maxLossStreak > longestLossStreak.count) longestLossStreak = { name, count: stats.maxLossStreak };
             });
-            
-            const avgBuyInPerSession = totalBuyIn / totalSessions;
-            
-            // Find highest win rate player (must have 5+ sessions)
+
+            // ── ROI & Avg P&L ───────────────────────────────────────────────────
+            let bestROI = { name: '', roi: -Infinity };
+            let bestAvgPnl = { name: '', avg: -Infinity };
+            Object.entries(playerStats).forEach(([name, stats]) => {
+                stats.roi = stats.buyIn > 0 ? (stats.net / stats.buyIn) * 100 : 0;
+                stats.avgPnl = stats.sessions > 0 ? stats.net / stats.sessions : 0;
+                if (stats.sessions >= 3) {
+                    if (stats.roi > bestROI.roi) bestROI = { name, roi: stats.roi };
+                    if (stats.avgPnl > bestAvgPnl.avg) bestAvgPnl = { name, avg: stats.avgPnl };
+                }
+            });
+
+            // ── Shark Index (5+ sessions) ───────────────────────────────────────
+            let topShark = { name: '', score: -Infinity };
+            Object.entries(playerStats).forEach(([name, stats]) => {
+                if (stats.sessions >= 5) {
+                    const winRate = stats.wins / stats.sessions;
+                    // Normalise ROI to 0-1 range (cap at ±200%)
+                    const roiNorm = Math.max(0, Math.min(1, (stats.roi + 200) / 400));
+                    // Consistency: low variance = high score; use std dev of session P&Ls
+                    const mean = stats.avgPnl;
+                    const variance = stats.sessionPnls.reduce((s, v) => s + (v - mean) ** 2, 0) / stats.sessionPnls.length;
+                    const stdDev = Math.sqrt(variance);
+                    // Normalise consistency: lower stdDev relative to |mean| is better
+                    const cv = mean !== 0 ? Math.abs(stdDev / mean) : 10;
+                    const consistencyScore = Math.max(0, 1 - Math.min(cv, 3) / 3);
+                    stats.sharkIndex = Math.round((winRate * 40 + roiNorm * 30 + consistencyScore * 30) * 10) / 10;
+                    if (stats.sharkIndex > topShark.score) topShark = { name, score: stats.sharkIndex };
+                } else {
+                    stats.sharkIndex = null;
+                }
+            });
+
+            // ── Comeback King ───────────────────────────────────────────────────
+            let comebackKing = { name: '', count: 0 };
+            Object.entries(playerStats).forEach(([name, stats]) => {
+                if (stats.comebackCount > comebackKing.count) comebackKing = { name, count: stats.comebackCount };
+            });
+
+            // ── Highest buy-in ──────────────────────────────────────────────────
+            let highestBuyIn = 0;
+            communitySessions.forEach(session => session.players.forEach(p => { if (p.buyIn > highestBuyIn) highestBuyIn = p.buyIn; }));
+
+            // ── Win rate leader (5+ sessions) ───────────────────────────────────
             let highestWinRatePlayer = { name: '', rate: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
                 if (stats.sessions >= 5) {
-                    const rate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
+                    const rate = Math.round((stats.wins / stats.sessions) * 100);
                     if (rate > highestWinRatePlayer.rate) highestWinRatePlayer = { name, rate };
                 }
             });
-            
-            // Find highest buy-in in any session
-            let highestBuyIn = 0;
-            communitySessions.forEach(session => {
-                session.players.forEach(p => {
-                    if (p.buyIn > highestBuyIn) highestBuyIn = p.buyIn;
-                });
-            });
-            
+
+            // ── Highest accumulative winner ─────────────────────────────────────
             let highestWinner = { name: '', net: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => { if (stats.net > highestWinner.net) highestWinner = { name, net: stats.net }; });
-            
+
+            // ════════════════════════════════════════════════════════════════════
+            // BUILD HTML
+            // ════════════════════════════════════════════════════════════════════
+
+            // ── Row 1: existing summary cards ───────────────────────────────────
             let html = `<div class="stats-summary">
                 <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
                 <div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div>
@@ -906,9 +1012,18 @@
                 <div class="stat-card"><div class="label">📉 Worst Loss Streak</div><div class="value negative">${longestLossStreak.name ? longestLossStreak.name + ' (' + longestLossStreak.count + ')' : '-'}</div></div>
                 <div class="stat-card full"><div class="label">🏆 Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
             </div>`;
-            
-            // Accumulated Winnings Chart with filter
-            // Player dropdown - only show players with 3+ sessions
+
+            // ── Row 2: New stat cards (ROI, Avg P&L, Biggest Win/Loss) ───────────
+            html += `<div class="stats-summary">
+                <div class="stat-card"><div class="label">📈 Best ROI</div><div class="value positive">${bestROI.name ? bestROI.name : '-'}</div><div class="sub">${bestROI.name ? (bestROI.roi >= 0 ? '+' : '') + bestROI.roi.toFixed(1) + '%' : ''}</div></div>
+                <div class="stat-card"><div class="label">💰 Best Avg P&amp;L/Session</div><div class="value positive">${bestAvgPnl.name ? bestAvgPnl.name : '-'}</div><div class="sub">${bestAvgPnl.name ? (bestAvgPnl.avg >= 0 ? '+' : '') + Math.round(bestAvgPnl.avg).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">🦈 Shark Index</div><div class="value gold">${topShark.name ? topShark.name : '-'}</div><div class="sub">${topShark.name ? topShark.score.toFixed(1) + '/100' : '5+ sessions needed'}</div></div>
+                <div class="stat-card"><div class="label">🎉 Comeback King</div><div class="value gold">${comebackKing.name ? comebackKing.name : '-'}</div><div class="sub">${comebackKing.name ? comebackKing.count + 'x multi-buyin wins' : '-'}</div></div>
+                <div class="stat-card"><div class="label">🚀 Biggest Single Win</div><div class="value positive">${highestSessionWinName || '-'}</div><div class="sub">${highestSessionWin > 0 ? '+' + Math.round(highestSessionWin).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">💀 Biggest Single Loss</div><div class="value negative">${highestSessionLossName || '-'}</div><div class="sub">${highestSessionLoss < 0 ? Math.round(highestSessionLoss).toLocaleString() : ''}</div></div>
+            </div>`;
+
+            // ── Accumulated Winnings Chart ───────────────────────────────────────
             const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= 3).sort();
             html += `<div class="chart-container">
                 <div class="chart-title">📈 Accumulated Winnings</div>
@@ -919,23 +1034,186 @@
                 </div>
                 <div class="line-chart" id="pnlChart"></div>
             </div>`;
-            
-            // Player stats table only
-            html += '<div class="player-stats"><h3>🏆 Player Performance (Click to view)</h3><div class="player-stat-row header"><div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div></div>';
-            
+
+            // ── Monthly / Quarterly Trends Chart ────────────────────────────────
+            const allPlayerNamesForMonthly = ['All Players', ...Object.keys(playerStats).sort()];
+            html += `<div class="chart-container">
+                <div class="chart-title">📅 Monthly P&amp;L Trends</div>
+                <div class="chart-filter">
+                    <select id="monthlyPlayerFilter" onchange="renderMonthlyChart()">
+                        ${allPlayerNamesForMonthly.map(name => `<option value="${name}">${name}</option>`).join('')}
+                    </select>
+                </div>
+                <div id="monthlyBarChart" style="overflow-x:auto;"></div>
+            </div>`;
+
+            // ── Extended Player Performance Table ───────────────────────────────
+            html += `<div class="player-stats">
+                <h3>🏆 Player Performance (Click to view)</h3>
+                <div style="overflow-x:auto;">
+                <div class="player-stat-row-ext header">
+                    <div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div><div>ROI %</div><div>Avg P&amp;L</div><div>Streak</div>
+                </div>`;
+
             const sortedPlayers = Object.entries(playerStats).sort((a, b) => b[1].net - a[1].net);
-            
-            sortedPlayers.forEach(([name, stats]) => { 
+
+            sortedPlayers.forEach(([name, stats]) => {
                 const winRate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
-                const pnlClass = stats.net >= 0 ? 'pnl-positive' : 'pnl-negative'; 
-                html += `<div class="player-stat-row" onclick="showPlayerDetail('${name}')"><div>${name}</div><div>${stats.sessions}</div><div class="${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div><div class="${pnlClass}">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net).toLocaleString()}</div></div>`; 
+                const pnlClass = stats.net >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const roiStr = (stats.roi >= 0 ? '+' : '') + stats.roi.toFixed(1) + '%';
+                const roiClass = stats.roi >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const avgStr = (stats.avgPnl >= 0 ? '+' : '') + Math.round(stats.avgPnl).toLocaleString();
+                const avgClass = stats.avgPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                // Hot/Cold streak indicator
+                let streakHtml = '<span class="streak-neutral">—</span>';
+                if (stats.currentStreakType === 'W' && stats.currentStreak > 0) {
+                    streakHtml = `<span class="streak-hot">🔥 ${stats.currentStreak}W</span>`;
+                } else if (stats.currentStreakType === 'L' && stats.currentStreak > 0) {
+                    streakHtml = `<span class="streak-cold">🧊 ${stats.currentStreak}L</span>`;
+                }
+                html += `<div class="player-stat-row-ext" onclick="showPlayerDetail('${name}')">
+                    <div>${name}</div>
+                    <div>${stats.sessions}</div>
+                    <div class="${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div>
+                    <div class="${pnlClass}">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net).toLocaleString()}</div>
+                    <div class="${roiClass}">${roiStr}</div>
+                    <div class="${avgClass}">${avgStr}</div>
+                    <div>${streakHtml}</div>
+                </div>`;
             });
-            
-            html += '</div>';
+
+            html += '</div></div>';
+
+            // ── Head-to-Head Section ─────────────────────────────────────────────
+            const h2hPlayerList = Object.keys(playerStats).sort();
+            const h2hOpts = h2hPlayerList.map(n => `<option value="${n}">${n}</option>`).join('');
+            html += `<div class="h2h-section">
+                <h3>⚔️ Head-to-Head</h3>
+                <div class="h2h-selectors">
+                    <select id="h2hPlayer1" onchange="renderH2H()">${h2hOpts}</select>
+                    <select id="h2hPlayer2" onchange="renderH2H()">${h2hOpts}</select>
+                </div>
+                <div id="h2hResult" class="h2h-result"><div style="color:var(--text-dim);font-size:13px;">Select two different players to compare</div></div>
+            </div>`;
+
             statsDiv.innerHTML = html;
-            
-            // Render the line chart after HTML is set
-            setTimeout(renderPnLChart, 0);
+
+            // Set default different players for H2H
+            if (h2hPlayerList.length >= 2) {
+                document.getElementById('h2hPlayer2').value = h2hPlayerList[1];
+            }
+
+            // Render charts after HTML is set
+            setTimeout(() => { renderPnLChart(); renderMonthlyChart(); renderH2H(); }, 0);
+        }
+
+        // ── Monthly Bar Chart ────────────────────────────────────────────────────
+        function renderMonthlyChart() {
+            const container = document.getElementById('monthlyBarChart');
+            if (!container) return;
+            const selectedPlayer = document.getElementById('monthlyPlayerFilter')?.value || 'All Players';
+            const communitySessions = getCommunitySessions();
+
+            // Aggregate by month
+            const monthlyData = {};
+            communitySessions.forEach(session => {
+                const month = session.date.slice(0, 7); // YYYY-MM
+                if (!monthlyData[month]) monthlyData[month] = 0;
+                if (selectedPlayer === 'All Players') {
+                    session.players.forEach(p => { monthlyData[month] += (p.stack - p.buyIn); });
+                } else {
+                    const player = session.players.find(p => p.name === selectedPlayer);
+                    if (player) monthlyData[month] += (player.stack - player.buyIn);
+                }
+            });
+
+            const months = Object.keys(monthlyData).sort();
+            if (months.length === 0) { container.innerHTML = '<div class="empty">No data</div>'; return; }
+
+            const values = months.map(m => monthlyData[m]);
+            const maxAbs = Math.max(...values.map(Math.abs), 1);
+            const maxBarHeight = 120; // px
+
+            let barsHtml = '<div class="monthly-bar-chart">';
+            months.forEach((month, i) => {
+                const val = values[i];
+                const barH = Math.max(2, Math.round((Math.abs(val) / maxAbs) * maxBarHeight));
+                const cls = val >= 0 ? 'positive' : 'negative';
+                const valStr = val >= 0 ? '+' + Math.round(val / 1000) + 'k' : Math.round(val / 1000) + 'k';
+                const label = month.slice(5); // MM
+                const yearLabel = month.slice(2, 4); // YY
+                barsHtml += `<div class="monthly-bar">
+                    <div class="monthly-bar-value ${cls}">${valStr}</div>
+                    <div class="monthly-bar-fill ${cls}" style="height:${barH}px;"></div>
+                    <div class="monthly-bar-label">${label}/${yearLabel}</div>
+                </div>`;
+            });
+            barsHtml += '</div>';
+            container.innerHTML = barsHtml;
+        }
+
+        // ── Head-to-Head Calculator ──────────────────────────────────────────────
+        function renderH2H() {
+            const p1El = document.getElementById('h2hPlayer1');
+            const p2El = document.getElementById('h2hPlayer2');
+            const resultEl = document.getElementById('h2hResult');
+            if (!p1El || !p2El || !resultEl) return;
+
+            const p1 = p1El.value;
+            const p2 = p2El.value;
+
+            if (p1 === p2) {
+                resultEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;">Select two different players</div>';
+                return;
+            }
+
+            const communitySessions = getCommunitySessions();
+            let p1Wins = 0, p2Wins = 0, ties = 0, sharedSessions = 0;
+            let p1TotalPnl = 0, p2TotalPnl = 0;
+
+            communitySessions.forEach(session => {
+                const player1 = session.players.find(p => p.name === p1);
+                const player2 = session.players.find(p => p.name === p2);
+                if (player1 && player2) {
+                    sharedSessions++;
+                    const pnl1 = player1.stack - player1.buyIn;
+                    const pnl2 = player2.stack - player2.buyIn;
+                    p1TotalPnl += pnl1;
+                    p2TotalPnl += pnl2;
+                    if (pnl1 > pnl2) p1Wins++;
+                    else if (pnl2 > pnl1) p2Wins++;
+                    else ties++;
+                }
+            });
+
+            if (sharedSessions === 0) {
+                resultEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;">These players have never played in the same session</div>';
+                return;
+            }
+
+            const p1WinClass = p1Wins > p2Wins ? 'winner' : 'loser';
+            const p2WinClass = p2Wins > p1Wins ? 'winner' : 'loser';
+            const p1PnlStr = (p1TotalPnl >= 0 ? '+' : '') + Math.round(p1TotalPnl).toLocaleString();
+            const p2PnlStr = (p2TotalPnl >= 0 ? '+' : '') + Math.round(p2TotalPnl).toLocaleString();
+
+            resultEl.innerHTML = `
+                <div class="h2h-vs">
+                    <div class="h2h-player">
+                        <div class="h2h-name">${p1}</div>
+                        <div class="h2h-wins ${p1WinClass}">${p1Wins}</div>
+                        <div style="font-size:11px;color:var(--text-dim);">wins</div>
+                        <div style="font-size:12px;margin-top:4px;color:${p1TotalPnl>=0?'var(--profit)':'var(--loss)'}">${p1PnlStr}</div>
+                    </div>
+                    <div class="h2h-divider">VS</div>
+                    <div class="h2h-player">
+                        <div class="h2h-name">${p2}</div>
+                        <div class="h2h-wins ${p2WinClass}">${p2Wins}</div>
+                        <div style="font-size:11px;color:var(--text-dim);">wins</div>
+                        <div style="font-size:12px;margin-top:4px;color:${p2TotalPnl>=0?'var(--profit)':'var(--loss)'}">${p2PnlStr}</div>
+                    </div>
+                </div>
+                <div class="h2h-meta">${sharedSessions} shared sessions${ties > 0 ? ' · ' + ties + ' tie(s)' : ''}</div>
+            `;
         }
         
         function renderPnLChart() {
@@ -1063,48 +1341,75 @@
         
         function showPlayerDetail(playerName) {
             document.getElementById('playerModalTitle').textContent = playerName;
-            
+
             // Calculate stats for this player
             const playerSessions = [];
             let wins = 0, losses = 0;
+            let totalBuyIn = 0;
+            let smallPnl = 0, smallCount = 0, largePnl = 0, largeCount = 0;
             const communitySessions = getCommunitySessions();
-            
+
             communitySessions.forEach(session => {
                 const player = session.players.find(p => p.name === playerName);
-                if (player) { 
+                if (player) {
                     const pnl = player.stack - player.buyIn;
                     if (pnl > 0) wins++;
                     else if (pnl < 0) losses++;
-                    playerSessions.push({ date: session.date, pnl: pnl, buyIn: player.buyIn, final: player.stack, hands: player.hands }); 
+                    totalBuyIn += player.buyIn;
+                    // Session size impact
+                    if (session.players.length <= 6) { smallPnl += pnl; smallCount++; }
+                    else { largePnl += pnl; largeCount++; }
+                    playerSessions.push({ date: session.date, pnl, buyIn: player.buyIn, final: player.stack, hands: player.hands || 1 });
                 }
             });
-            
+
             playerSessions.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
+
             const totalNet = playerSessions.reduce((sum, s) => sum + s.pnl, 0);
             const totalSessions = playerSessions.length;
             const winRate = totalSessions > 0 ? Math.round((wins / totalSessions) * 100) : 0;
-            
-            // Calculate streaks
-            let currentStreak = 0, maxWinStreak = 0, maxLossStreak = 0, streakType = '';
-            playerSessions.forEach(s => {
+            const avgBuyIn = totalSessions > 0 ? totalBuyIn / totalSessions : 0;
+            const roi = totalBuyIn > 0 ? (totalNet / totalBuyIn) * 100 : 0;
+            const avgPnl = totalSessions > 0 ? totalNet / totalSessions : 0;
+
+            // Calculate streaks (chronological)
+            const chronSessions = [...playerSessions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            let curStreak = 0, maxWinStreak = 0, maxLossStreak = 0, streakType = '', curStreakCount = 0, curStreakTypeLabel = '';
+            chronSessions.forEach(s => {
                 if (s.pnl > 0) {
-                    if (streakType === 'win') { currentStreak++; }
-                    else { currentStreak = 1; streakType = 'win'; }
-                    if (currentStreak > maxWinStreak) maxWinStreak = currentStreak;
+                    if (streakType === 'win') curStreak++; else { curStreak = 1; streakType = 'win'; }
+                    if (curStreak > maxWinStreak) maxWinStreak = curStreak;
+                    curStreakCount = curStreak; curStreakTypeLabel = 'W';
                 } else if (s.pnl < 0) {
-                    if (streakType === 'loss') { currentStreak++; }
-                    else { currentStreak = 1; streakType = 'loss'; }
-                    if (currentStreak > maxLossStreak) maxLossStreak = currentStreak;
+                    if (streakType === 'loss') curStreak++; else { curStreak = 1; streakType = 'loss'; }
+                    if (curStreak > maxLossStreak) maxLossStreak = curStreak;
+                    curStreakCount = curStreak; curStreakTypeLabel = 'L';
                 } else {
-                    currentStreak = 0; streakType = '';
+                    curStreak = 0; streakType = ''; curStreakCount = 0; curStreakTypeLabel = '';
                 }
             });
-            
+
             document.getElementById('playerTotalSessions').textContent = totalSessions;
             document.getElementById('playerTotalNet').textContent = (totalNet >= 0 ? '+' : '') + Math.round(totalNet).toLocaleString();
             document.getElementById('playerTotalNet').className = 'value ' + (totalNet >= 0 ? 'positive' : 'negative');
-            
+
+            // Current streak indicator
+            let streakIndicator = '';
+            if (curStreakTypeLabel === 'W') streakIndicator = `<span class="streak-hot">🔥 ${curStreakCount}W streak</span>`;
+            else if (curStreakTypeLabel === 'L') streakIndicator = `<span class="streak-cold">🧊 ${curStreakCount}L streak</span>`;
+
+            // Session size impact
+            const smallAvg = smallCount > 0 ? Math.round(smallPnl / smallCount) : null;
+            const largeAvg = largeCount > 0 ? Math.round(largePnl / largeCount) : null;
+            const sizeImpactHtml = `
+                <div style="margin:10px 0;padding:10px;background:var(--bg);border-radius:8px;">
+                    <div style="font-size:12px;color:var(--gold);font-weight:bold;margin-bottom:8px;">📊 Session Size Impact</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div class="mini-stat"><div class="label">Small Table (≤6)</div><div class="value ${smallAvg !== null ? (smallAvg >= 0 ? 'positive' : 'negative') : ''}">${smallAvg !== null ? (smallAvg >= 0 ? '+' : '') + smallAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${smallCount} sessions</div></div>
+                        <div class="mini-stat"><div class="label">Large Table (>6)</div><div class="value ${largeAvg !== null ? (largeAvg >= 0 ? 'positive' : 'negative') : ''}">${largeAvg !== null ? (largeAvg >= 0 ? '+' : '') + largeAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${largeCount} sessions</div></div>
+                    </div>
+                </div>`;
+
             // Show detailed stats
             let statsHtml = `<div class="player-stats-grid">
                 <div class="mini-stat"><div class="label">Win Rate</div><div class="value ${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div></div>
@@ -1112,12 +1417,20 @@
                 <div class="mini-stat"><div class="label">Losses</div><div class="value negative">${losses}</div></div>
                 <div class="mini-stat"><div class="label">Best Streak</div><div class="value">${maxWinStreak}</div></div>
                 <div class="mini-stat"><div class="label">Worst Streak</div><div class="value negative">${maxLossStreak}</div></div>
-                <div class="mini-stat"><div class="label">Total Net</div><div class="value ${totalNet >= 0 ? 'positive' : 'negative'}">${totalNet >= 0 ? '+' : ''}${Math.round(totalNet).toLocaleString()}</div></div>
-            </div>`;
-            
+                <div class="mini-stat"><div class="label">ROI %</div><div class="value ${roi >= 0 ? 'positive' : 'negative'}">${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</div></div>
+                <div class="mini-stat"><div class="label">Avg P&amp;L/Session</div><div class="value ${avgPnl >= 0 ? 'positive' : 'negative'}">${avgPnl >= 0 ? '+' : ''}${Math.round(avgPnl).toLocaleString()}</div></div>
+                <div class="mini-stat"><div class="label">Avg Buy-in</div><div class="value">${Math.round(avgBuyIn).toLocaleString()}</div></div>
+                <div class="mini-stat"><div class="label">Current Streak</div><div class="value">${streakIndicator || '<span style="color:var(--text-dim)">—</span>'}</div></div>
+            </div>
+            ${sizeImpactHtml}`;
+
             let html = '<div class="player-detail-header" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;"><div>Date</div><div>Buy-in</div><div>Stack</div><div>Net</div></div>';
-            playerSessions.forEach(s => { const pnlClass = s.pnl >= 0 ? 'positive' : 'negative'; const pnlPrefix = s.pnl >= 0 ? '+' : ''; html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>${Math.round(s.buyIn).toLocaleString()}</div><div>${Math.round(s.final).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`; });
-            
+            playerSessions.forEach(s => {
+                const pnlClass = s.pnl >= 0 ? 'positive' : 'negative';
+                const pnlPrefix = s.pnl >= 0 ? '+' : '';
+                html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>${Math.round(s.buyIn).toLocaleString()}</div><div>${Math.round(s.final).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`;
+            });
+
             document.getElementById('playerSessionsList').innerHTML = statsHtml + (html || '<div class="empty">No sessions</div>');
             document.getElementById('playerModal').classList.add('active');
         }
