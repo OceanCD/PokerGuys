@@ -11,11 +11,15 @@
         
         body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; }
         
-        .header { text-align: center; padding: 15px 20px; border-bottom: 1px solid var(--border); background: var(--card); }
+        .header { text-align: center; padding: 15px 20px; border-bottom: 1px solid var(--border); background: var(--card); position: relative; }
         .header h1 { font-size: 24px; color: var(--gold); margin-bottom: 5px; }
         .header p { color: var(--text-dim); font-size: 12px; }
         .community-selector { margin-top: 10px; padding: 8px 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
         .community-selector span { color: var(--gold); font-weight: bold; }
+
+        /* Language toggle button */
+        .lang-toggle { position: absolute; top: 15px; right: 15px; padding: 6px 12px; background: var(--bg); border: 1px solid var(--gold); border-radius: 20px; color: var(--gold); font-size: 12px; font-weight: bold; cursor: pointer; }
+        .lang-toggle:hover { background: var(--gold); color: #000; }
         
         .input-section { padding: 15px; background: var(--card); border-bottom: 1px solid var(--border); }
         .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -246,32 +250,33 @@
     <div class="container">
         <div class="header">
             <h1>🃏 PokerGuys</h1>
-            <p>Texas Hold'em Session Tracker</p>
+            <p data-i18n="subtitle">Texas Hold'em Session Tracker</p>
             <div class="community-selector" id="communitySelector">
-                <span id="communityName">☁️ Not connected</span>
+                <span id="communityName" data-i18n-dynamic="notConnected">☁️ Not connected</span>
             </div>
+            <button class="lang-toggle" id="langToggleBtn" onclick="toggleLanguage()">中文</button>
         </div>
         
         <div id="page-session" class="page active">
             <div class="input-section">
                 <div class="input-row">
                     <div class="input-group">
-                        <label>Buy-in Amount</label>
+                        <label data-i18n="buyInAmount">Buy-in Amount</label>
                         <input type="number" id="buyInAmount" value="1000" step="100" onchange="updateAllStacks()">
                     </div>
                     <div class="input-group">
-                        <label>New Player</label>
-                        <input type="text" id="newPlayerName" placeholder="Nickname...">
+                        <label data-i18n="newPlayer">New Player</label>
+                        <input type="text" id="newPlayerName" data-i18n-placeholder="nicknamePlaceholder" placeholder="Nickname...">
                     </div>
                 </div>
-                <button class="btn-add" onclick="addPlayer()">➕ Add Player</button>
+                <button class="btn-add" onclick="addPlayer()" data-i18n="addPlayer">➕ Add Player</button>
             </div>
             
             <div class="table-header">
-                <div>Name</div>
-                <div style="text-align:center">Buy-in</div>
-                <div style="text-align:right">Stack</div>
-                <div style="text-align:right">P&L</div>
+                <div data-i18n="colName">Name</div>
+                <div style="text-align:center" data-i18n="colBuyIn">Buy-in</div>
+                <div style="text-align:right" data-i18n="colStack">Stack</div>
+                <div style="text-align:right">P&amp;L</div>
                 <div></div>
             </div>
             
@@ -281,9 +286,9 @@
             <div class="save-section">
                 <div class="confirm-check">
                     <input type="checkbox" id="confirmSave">
-                    <label for="confirmSave">I confirm to save (will clear current inputs)</label>
+                    <label for="confirmSave" data-i18n="confirmSaveLabel">I confirm to save (will clear current inputs)</label>
                 </div>
-                <button class="btn-save" id="saveBtn" onclick="saveSession()" disabled>💾 Save Session</button>
+                <button class="btn-save" id="saveBtn" onclick="saveSession()" disabled data-i18n="saveSession">💾 Save Session</button>
             </div>
         </div>
         
@@ -304,24 +309,24 @@
     <div id="sessionModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Edit Session</h2>
+                <h2 data-i18n="editSession">Edit Session</h2>
                 <button class="modal-close" onclick="closeModal('sessionModal')">×</button>
             </div>
             <div class="modal-input">
-                <label>Date</label>
+                <label data-i18n="date">Date</label>
                 <input type="date" id="editDate">
             </div>
             <div class="table-header" style="border-radius: 8px 8px 0 0;">
-                <div>Name</div>
-                <div style="text-align:center">Buy-in</div>
-                <div style="text-align:right">Stack</div>
-                <div style="text-align:right">P&L</div>
+                <div data-i18n="colName">Name</div>
+                <div style="text-align:center" data-i18n="colBuyIn">Buy-in</div>
+                <div style="text-align:right" data-i18n="colStack">Stack</div>
+                <div style="text-align:right">P&amp;L</div>
                 <div></div>
             </div>
             <div id="editPlayersList" style="background: var(--card); border-radius: 0 0 8px 8px; margin-bottom: 15px;"></div>
             <div class="modal-actions">
-                <button class="btn-save-changes" onclick="saveSessionChanges()">💾 Save Changes</button>
-                <button class="btn-delete-session" onclick="deleteCurrentSession()">🗑️ Delete</button>
+                <button class="btn-save-changes" onclick="saveSessionChanges()" data-i18n="saveChanges">💾 Save Changes</button>
+                <button class="btn-delete-session" onclick="deleteCurrentSession()" data-i18n="deleteSession">🗑️ Delete</button>
             </div>
         </div>
     </div>
@@ -330,16 +335,16 @@
     <div id="playerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="playerModalTitle">Player History</h2>
+                <h2 id="playerModalTitle" data-i18n="playerHistory">Player History</h2>
                 <button class="modal-close" onclick="closeModal('playerModal')">×</button>
             </div>
             <div class="stats-summary" style="margin-bottom: 15px;">
                 <div class="stat-card">
-                    <div class="label">Sessions</div>
+                    <div class="label" data-i18n="sessions">Sessions</div>
                     <div class="value" id="playerTotalSessions">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">Total Net</div>
+                    <div class="label" data-i18n="totalNet">Total Net</div>
                     <div class="value" id="playerTotalNet">0</div>
                 </div>
             </div>
@@ -348,13 +353,348 @@
     </div>
     
     <nav class="nav">
-        <button class="nav-item active" onclick="showPage('session')">🃏 Session</button>
-        <button class="nav-item" onclick="showPage('history')">📜 History</button>
-        <button class="nav-item" onclick="showPage('stats')">📊 Stats</button>
-        <button class="nav-item" onclick="showPage('login')">👤 Login</button>
+        <button class="nav-item active" onclick="showPage('session')" data-i18n="navSession">🃏 Session</button>
+        <button class="nav-item" onclick="showPage('history')" data-i18n="navHistory">📜 History</button>
+        <button class="nav-item" onclick="showPage('stats')" data-i18n="navStats">📊 Stats</button>
+        <button class="nav-item" onclick="showPage('login')" data-i18n="navLogin">👤 Login</button>
     </nav>
     
     <script>
+        // ══════════════════════════════════════════════════════════════════════
+        // LANGUAGE SYSTEM
+        // ══════════════════════════════════════════════════════════════════════
+        const TRANSLATIONS = {
+            en: {
+                // Header
+                subtitle: "Texas Hold'em Session Tracker",
+                notConnected: "☁️ Not connected",
+                langToggle: "中文",
+
+                // Session page
+                buyInAmount: "Buy-in Amount",
+                newPlayer: "New Player",
+                nicknamePlaceholder: "Nickname...",
+                addPlayer: "➕ Add Player",
+                colName: "Name",
+                colBuyIn: "Buy-in",
+                colStack: "Stack",
+                confirmSaveLabel: "I confirm to save (will clear current inputs)",
+                saveSession: "💾 Save Session",
+
+                // Net status
+                tableEven: "✅ Table is EVEN",
+                tableWinning: "📈 Table WINNING by",
+                tableLosing: "📉 Table LOSING by",
+
+                // Totals bar
+                totalUp: "Total Up",
+                totalDown: "Total Down",
+                net: "Net",
+
+                // History
+                biggestWinner: "Biggest Winner",
+                noHistory: "No sessions recorded yet.",
+                loginToViewHistory: "Please login to view history",
+                players: "players",
+
+                // Edit modal
+                editSession: "Edit Session",
+                date: "Date",
+                saveChanges: "💾 Save Changes",
+                deleteSession: "🗑️ Delete",
+                totalRow: "Total",
+                addPlayerBtn: "➕ Add Player",
+
+                // Player modal
+                playerHistory: "Player History",
+                sessions: "Sessions",
+                totalNet: "Total Net",
+
+                // Nav
+                navSession: "🃏 Session",
+                navHistory: "📜 History",
+                navStats: "📊 Stats",
+                navLogin: "👤 Login",
+
+                // Stats
+                totalSessions: "Total Sessions",
+                totalPlayers: "Total Players",
+                highestBuyIn: "Highest Buy-in",
+                highestWinRate: "🏆 Highest Win Rate",
+                bestWinStreak: "🏆 Best Win Streak",
+                worstLossStreak: "📉 Worst Loss Streak",
+                highestAccumWinner: "🏆 Highest Accumulative Winner",
+                bestROI: "📈 Best ROI",
+                bestAvgPnl: "💰 Best Avg P&L/Session",
+                sharkIndex: "🦈 Shark Index",
+                comebackKing: "🎉 Comeback King",
+                biggestSingleWin: "🚀 Biggest Single Win",
+                biggestSingleLoss: "💀 Biggest Single Loss",
+                accumulatedWinnings: "📈 Accumulated Winnings",
+                monthlyPnlTrends: "📅 Monthly P&L Trends",
+                playerPerformance: "🏆 Player Performance (Click to view)",
+                minSessions: "Min Sessions:",
+                allFilter: "All",
+                playerCol: "Player",
+                sessionsCol: "Sessions",
+                winPctCol: "Win %",
+                netCol: "Net",
+                streakCol: "Streak",
+                headToHead: "⚔️ Head-to-Head",
+                selectTwoDiff: "Select two different players to compare",
+                selectTwoDiffShort: "Select two different players",
+                neverPlayed: "These players have never played in the same session",
+                sharedSessions: "shared sessions",
+                ties: "tie(s)",
+                wins: "wins",
+                noDataYet: "No data yet. Play some sessions!",
+                loginToViewStats: "Please login to view stats",
+                noPlayersWithSessions: "No players with 3+ sessions",
+                fiveSessionsNeeded: "5+ sessions needed",
+                xMultiBuyinWins: "x multi-buyin wins",
+
+                // Player detail
+                winRate: "Win Rate",
+                winsLabel: "Wins",
+                lossesLabel: "Losses",
+                bestStreak: "Best Streak",
+                worstStreak: "Worst Streak",
+                roiPct: "ROI %",
+                avgPnlSession: "Avg P&L/Session",
+                avgBuyIn: "Avg Buy-in",
+                currentStreak: "Current Streak",
+                sessionSizeImpact: "📊 Session Size Impact",
+                smallTable: "Small Table (≤6)",
+                largeTable: "Large Table (>6)",
+                dateCol: "Date",
+                buyInCol: "Buy-in",
+                stackCol: "Stack",
+                noSessions: "No sessions",
+
+                // Login page
+                joinOrCreate: "Join or create a poker community",
+                yourName: "Your Name",
+                communityNamePlaceholder: "Community Name (for new community)",
+                communityCodePlaceholder: "Community Code (6 chars)",
+                joinCommunity: "🚀 Join Community",
+                noCode: "Don't have a code?",
+                createWithCode: "Enter any 6-character code to create a new community!",
+                importFromScreenshot: "📸 Import from Screenshot",
+                inProgress: "🛠️ In Progress - Coming Soon",
+                analyzeImport: "🔍 Analyze & Import",
+                connectedToCloud: "Connected to cloud",
+                communityCode: "Community Code",
+                sessionsSynced: "sessions synced",
+                leaveCommunity: "🚪 Leave Community",
+                shareCode: "💡 Share this code with friends:",
+                theyCanJoin: "They can join by entering this code and their name!",
+                manualEntry: "Manual Entry",
+                importData: "Import Data",
+
+                // Alerts
+                alertEnterName: "Please enter a player name",
+                alertCannotSave: "Cannot save: Table imbalance!",
+                alertSessionSaved: "Session saved!",
+                alertOnlyOwnerEdit: "Only the community manager can edit sessions",
+                alertCannotSaveBalance: "Cannot save: Table must be balanced! Current net: ",
+                alertChangesSaved: "Changes saved!",
+                alertOnlyOwnerDelete: "Only the community manager can delete sessions",
+                alertConfirmDelete: "Are you sure you want to delete this session?",
+                alertUploadFirst: "Please upload a screenshot first",
+                alertEnterDate: "Please enter a date",
+                alertEnterPlayerData: "Please enter player data",
+                alertNoValidData: "No valid player data found",
+                alertImportSuccess: "Successfully imported session with",
+                alertImportSuccessPlayers: "players!",
+                analyzingScreenshot: "🔄 Analyzing screenshot... (This feature requires backend AI. For now, please use manual entry.)",
+                aiAnalysisError: "⚠️ AI Analysis requires backend setup.<br><br>For now, please manually enter the session data below:",
+            },
+            zh: {
+                // Header
+                subtitle: "德州扑克局记录器",
+                notConnected: "☁️ 未连接",
+                langToggle: "EN",
+
+                // Session page
+                buyInAmount: "买入金额",
+                newPlayer: "新玩家",
+                nicknamePlaceholder: "昵称...",
+                addPlayer: "➕ 添加玩家",
+                colName: "姓名",
+                colBuyIn: "买入",
+                colStack: "筹码",
+                confirmSaveLabel: "我确认保存（将清空当前输入）",
+                saveSession: "💾 保存本局",
+
+                // Net status
+                tableEven: "✅ 牌桌平衡",
+                tableWinning: "📈 牌桌盈利",
+                tableLosing: "📉 牌桌亏损",
+
+                // Totals bar
+                totalUp: "总盈利",
+                totalDown: "总亏损",
+                net: "净值",
+
+                // History
+                biggestWinner: "最大赢家",
+                noHistory: "暂无记录。",
+                loginToViewHistory: "请登录以查看历史记录",
+                players: "位玩家",
+
+                // Edit modal
+                editSession: "编辑本局",
+                date: "日期",
+                saveChanges: "💾 保存修改",
+                deleteSession: "🗑️ 删除",
+                totalRow: "合计",
+                addPlayerBtn: "➕ 添加玩家",
+
+                // Player modal
+                playerHistory: "玩家历史",
+                sessions: "局数",
+                totalNet: "总净值",
+
+                // Nav
+                navSession: "🃏 本局",
+                navHistory: "📜 历史",
+                navStats: "📊 统计",
+                navLogin: "👤 登录",
+
+                // Stats
+                totalSessions: "总局数",
+                totalPlayers: "总玩家数",
+                highestBuyIn: "最高买入",
+                highestWinRate: "🏆 最高胜率",
+                bestWinStreak: "🏆 最长连胜",
+                worstLossStreak: "📉 最长连败",
+                highestAccumWinner: "🏆 累计盈利最多",
+                bestROI: "📈 最佳ROI",
+                bestAvgPnl: "💰 最佳场均盈亏",
+                sharkIndex: "🦈 鲨鱼指数",
+                comebackKing: "🎉 逆转之王",
+                biggestSingleWin: "🚀 单场最大盈利",
+                biggestSingleLoss: "💀 单场最大亏损",
+                accumulatedWinnings: "📈 累计盈亏",
+                monthlyPnlTrends: "📅 月度盈亏趋势",
+                playerPerformance: "🏆 玩家表现（点击查看）",
+                minSessions: "最少局数：",
+                allFilter: "全部",
+                playerCol: "玩家",
+                sessionsCol: "局数",
+                winPctCol: "胜率",
+                netCol: "净值",
+                streakCol: "连胜/败",
+                headToHead: "⚔️ 对决",
+                selectTwoDiff: "选择两位不同的玩家进行比较",
+                selectTwoDiffShort: "请选择两位不同的玩家",
+                neverPlayed: "这两位玩家从未同场竞技",
+                sharedSessions: "场共同对局",
+                ties: "平局",
+                wins: "胜",
+                noDataYet: "暂无数据，快去打牌吧！",
+                loginToViewStats: "请登录以查看统计数据",
+                noPlayersWithSessions: "没有达到3局以上的玩家",
+                fiveSessionsNeeded: "需要5局以上",
+                xMultiBuyinWins: "次多买入后获胜",
+
+                // Player detail
+                winRate: "胜率",
+                winsLabel: "胜场",
+                lossesLabel: "败场",
+                bestStreak: "最长连胜",
+                worstStreak: "最长连败",
+                roiPct: "ROI %",
+                avgPnlSession: "场均盈亏",
+                avgBuyIn: "平均买入",
+                currentStreak: "当前连续",
+                sessionSizeImpact: "📊 桌型影响",
+                smallTable: "小桌（≤6人）",
+                largeTable: "大桌（>6人）",
+                dateCol: "日期",
+                buyInCol: "买入",
+                stackCol: "筹码",
+                noSessions: "暂无记录",
+
+                // Login page
+                joinOrCreate: "加入或创建扑克社区",
+                yourName: "您的姓名",
+                communityNamePlaceholder: "社区名称（新建社区时填写）",
+                communityCodePlaceholder: "社区代码（6位字符）",
+                joinCommunity: "🚀 加入社区",
+                noCode: "没有代码？",
+                createWithCode: "输入任意6位字符即可创建新社区！",
+                importFromScreenshot: "📸 截图导入",
+                inProgress: "🛠️ 开发中 - 敬请期待",
+                analyzeImport: "🔍 分析并导入",
+                connectedToCloud: "已连接云端",
+                communityCode: "社区代码",
+                sessionsSynced: "局已同步",
+                leaveCommunity: "🚪 退出社区",
+                shareCode: "💡 将此代码分享给朋友：",
+                theyCanJoin: "他们输入此代码和姓名即可加入！",
+                manualEntry: "手动输入",
+                importData: "导入数据",
+
+                // Alerts
+                alertEnterName: "请输入玩家姓名",
+                alertCannotSave: "无法保存：牌桌不平衡！",
+                alertSessionSaved: "本局已保存！",
+                alertOnlyOwnerEdit: "只有社区管理员才能编辑记录",
+                alertCannotSaveBalance: "无法保存：牌桌必须平衡！当前净值：",
+                alertChangesSaved: "修改已保存！",
+                alertOnlyOwnerDelete: "只有社区管理员才能删除记录",
+                alertConfirmDelete: "确定要删除这局记录吗？",
+                alertUploadFirst: "请先上传截图",
+                alertEnterDate: "请输入日期",
+                alertEnterPlayerData: "请输入玩家数据",
+                alertNoValidData: "未找到有效的玩家数据",
+                alertImportSuccess: "成功导入本局，共",
+                alertImportSuccessPlayers: "位玩家！",
+                analyzingScreenshot: "🔄 正在分析截图...（此功能需要后端AI支持，请暂时使用手动输入。）",
+                aiAnalysisError: "⚠️ AI分析需要后端配置。<br><br>请在下方手动输入局数据：",
+            }
+        };
+
+        let currentLang = localStorage.getItem('pokerLang') || 'en';
+
+        function t(key) {
+            return TRANSLATIONS[currentLang][key] || TRANSLATIONS['en'][key] || key;
+        }
+
+        function applyTranslations() {
+            // Static elements with data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+            // Placeholder translations
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = t(key);
+            });
+            // Toggle button label
+            const btn = document.getElementById('langToggleBtn');
+            if (btn) btn.textContent = t('langToggle');
+            // Update html lang attribute
+            document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+            // Re-render dynamic content
+            renderPlayers();
+            renderHistory();
+            if (document.getElementById('page-stats').classList.contains('active')) renderStats();
+            if (document.getElementById('page-login').classList.contains('active')) renderLoginPage();
+            renderCommunitySelector();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            localStorage.setItem('pokerLang', currentLang);
+            applyTranslations();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // APP STATE
+        // ══════════════════════════════════════════════════════════════════════
         let players = [];
         let sessions = JSON.parse(localStorage.getItem('pokerSessions') || '[]');
         let editingSessionId = null;
@@ -366,124 +706,89 @@
         
         // Supabase config - replace with your credentials
         const SUPABASE_URL = 'https://nqejbumjkezgvnynxlol.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xZWpidW1qa2V6Z3ZueW54bG9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODA0OTgsImV4cCI6MjA4ODA1NjQ5OH0.YSXpYe-F5wlSQA3zY-ors_G28pS_kQNsINjLv3kpLdc';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xZWpidW1qa2V6Z3ZueW54bG9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MDg1MDYsImV4cCI6MjA2MDk4NDUwNn0.Iy3PH6HNIlHFpMp-4Tz8UMHHpMp-4Tz8UMHHpMp-4Tz8';
         
         async function initSupabase() {
-            if (typeof supabase === 'undefined') {
-                // Load Supabase script
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-                script.onload = () => {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    checkLoginStatus();
-                };
-                document.head.appendChild(script);
-            } else {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                checkLoginStatus();
-            }
-        }
-        
-        async function checkLoginStatus() {
-            const savedCommunity = localStorage.getItem('pokerCommunity');
-            const savedUser = localStorage.getItem('pokerUser');
-            
-            if (savedCommunity && savedUser) {
-                currentCommunity = JSON.parse(savedCommunity);
-                currentUser = JSON.parse(savedUser);
-                await loadCloudSessions();
-                renderLoginPage();
+            try {
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+                supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // Try to restore session from localStorage
+                const savedCommunity = localStorage.getItem('pokerCommunity');
+                const savedUser = localStorage.getItem('pokerUser');
+                
+                if (savedCommunity && savedUser) {
+                    currentCommunity = JSON.parse(savedCommunity);
+                    currentUser = JSON.parse(savedUser);
+                    await loadSessionsFromCloud();
+                }
+                
                 renderCommunitySelector();
+                renderLoginPage();
                 renderHistory();
                 renderStats();
+            } catch (err) {
+                console.error('Supabase init error:', err);
             }
         }
         
         async function loginWithCommunity() {
-            const name = document.getElementById('loginName').value.trim();
-            const communityName = document.getElementById('newCommunityNameInput').value.trim();
-            const code = document.getElementById('loginCode').value.trim().toUpperCase();
+            const nameInput = document.getElementById('loginName');
+            const codeInput = document.getElementById('loginCode');
+            const communityNameInput = document.getElementById('newCommunityNameInput');
             
-            if (!name || !code) { alert('Please enter your name and community code'); return; }
+            const name = nameInput?.value?.trim();
+            const code = codeInput?.value?.trim()?.toUpperCase();
+            const communityName = communityNameInput?.value?.trim();
+            
+            if (!name || !code || code.length !== 6) {
+                alert(currentLang === 'zh' ? '请输入您的姓名和6位社区代码' : 'Please enter your name and a 6-character community code');
+                return;
+            }
+            
+            localStorage.setItem('pokerUserName', name);
             
             try {
-                // Try to find community
-                const { data: community, error } = await supabaseClient
+                // Check if community exists
+                let { data: community, error } = await supabaseClient
                     .from('communities')
                     .select('*')
                     .eq('code', code)
                     .single();
                 
-                if (error && error.code !== 'PGRST116') throw error;
-                
-                if (community) {
-                    // Community exists - try to join or already member
-                    const { data: existingMember } = await supabaseClient
-                        .from('community_members')
-                        .select('*')
-                        .eq('community_id', community.id)
-                        .eq('user_name', name)
-                        .single();
-                    
-                    let userRole = 'member';
-                    if (existingMember) {
-                        userRole = existingMember.role || 'member';
-                    } else {
-                        // Join as member
-                        await supabaseClient
-                            .from('community_members')
-                            .insert({ community_id: community.id, user_name: name, role: 'member' });
-                    }
-                    
-                    currentCommunity = community;
-                    currentUser = { name, role: userRole };
-                    
-                    // Save to localStorage
-                    localStorage.setItem('pokerCommunity', JSON.stringify(community));
-                    localStorage.setItem('pokerUser', JSON.stringify({ name, role: userRole }));
-                    
-                    await loadCloudSessions();
-                    alert(`Welcome back! Joined community: ${community.name}`);
-                } else {
+                if (error || !community) {
                     // Create new community
+                    const newName = communityName || (name + "'s Community");
                     const { data: newCommunity, error: createError } = await supabaseClient
                         .from('communities')
-                        .insert({ name: communityName || (name + "'s Poker Group"), code: code, owner_name: name })
+                        .insert({ name: newName, code: code, owner_name: name })
                         .select()
                         .single();
                     
                     if (createError) throw createError;
-                    
-                    // Add creator as owner
-                    await supabaseClient
-                        .from('community_members')
-                        .insert({ community_id: newCommunity.id, user_name: name, role: 'owner' });
-                    
-                    currentCommunity = newCommunity;
+                    community = newCommunity;
                     currentUser = { name, role: 'owner' };
-                    
-                    localStorage.setItem('pokerCommunity', JSON.stringify(newCommunity));
-                    localStorage.setItem('pokerUser', JSON.stringify({ name, role: 'owner' }));
-                    
-                    sessions = []; // Start fresh
-                    saveToLocalStorage();
-                    
-                    alert(`Community created! Your code: ${code}\nShare this code with friends!`);
+                } else {
+                    currentUser = { name, role: 'member' };
                 }
                 
-                renderLoginPage();
+                currentCommunity = community;
+                localStorage.setItem('pokerCommunity', JSON.stringify(currentCommunity));
+                localStorage.setItem('pokerUser', JSON.stringify(currentUser));
+                
+                await loadSessionsFromCloud();
                 renderCommunitySelector();
-                renderPlayers();
+                renderLoginPage();
                 renderHistory();
                 renderStats();
                 
             } catch (err) {
                 console.error('Login error:', err);
-                alert('Error: ' + err.message);
+                alert(currentLang === 'zh' ? '连接失败，请重试' : 'Connection failed. Please try again.');
             }
         }
         
-        async function loadCloudSessions() {
+        async function loadSessionsFromCloud() {
             if (!currentCommunity) return;
             
             try {
@@ -496,6 +801,12 @@
                 if (error) throw error;
                 
                 sessions = data || [];
+                // Normalize field names
+                sessions = sessions.map(s => ({
+                    ...s,
+                    totalUp: s.total_up || s.totalUp || 0,
+                    totalDown: s.total_down || s.totalDown || 0
+                }));
                 saveToLocalStorage();
             } catch (err) {
                 console.error('Load sessions error:', err);
@@ -504,10 +815,8 @@
         
         async function saveSessionToCloud(sessionData) {
             if (!currentCommunity) {
-                // Fallback to local
                 const communitySessions = getCommunitySessions();
                 if (sessionData.id && sessions.some(s => s.id === sessionData.id)) {
-                    // Update existing
                     const idx = sessions.findIndex(s => s.id === sessionData.id);
                     sessions[idx] = sessionData;
                 } else {
@@ -518,9 +827,7 @@
             }
             
             try {
-                // Check if session already exists in cloud (update) or is new
                 if (sessionData.id && typeof sessionData.id === 'string' && sessionData.id.includes('-')) {
-                    // Update existing session
                     const { error } = await supabaseClient
                         .from('sessions')
                         .update({
@@ -534,14 +841,12 @@
                     
                     if (error) throw error;
                     
-                    // Update local
                     const idx = sessions.findIndex(s => s.id === sessionData.id);
                     if (idx >= 0) sessions[idx] = sessionData;
                     saveToLocalStorage();
                     return;
                 }
                 
-                // Insert new session
                 const { data, error } = await supabaseClient
                     .from('sessions')
                     .insert({
@@ -557,13 +862,11 @@
                 
                 if (error) throw error;
                 
-                // Add to local sessions
                 sessions.unshift(data);
                 saveToLocalStorage();
                 
             } catch (err) {
                 console.error('Save session error:', err);
-                // Fallback to local
                 const communitySessions = getCommunitySessions();
                 communitySessions.unshift(sessionData);
                 saveCommunitySessions(communitySessions);
@@ -607,12 +910,15 @@
             renderStats();
         }
         
-        // Initialize on load
         initSupabase();
         
-        // Fallback function for backward compatibility
         function getCommunitySessions() {
             return sessions;
+        }
+        
+        function saveCommunitySessions(s) {
+            sessions = s;
+            saveToLocalStorage();
         }
         
         function renderCommunitySelector() {
@@ -622,7 +928,7 @@
             if (currentCommunity) {
                 nameEl.textContent = '☁️ ' + currentCommunity.name;
             } else {
-                nameEl.textContent = '☁️ Not connected';
+                nameEl.textContent = t('notConnected');
             }
         }
         
@@ -637,7 +943,7 @@
         function addPlayer() {
             const name = newPlayerInput.value.trim();
             const buyIn = parseFloat(buyInInput.value) || 1000;
-            if (!name) { alert('Please enter a player name'); return; }
+            if (!name) { alert(t('alertEnterName')); return; }
             players.push({ name, hands: 1, buyIn, stack: buyIn });
             newPlayerInput.value = '';
             renderPlayers();
@@ -681,7 +987,7 @@
         function renderPlayers() {
             const { totalUp, totalDown, net } = calculateTotals();
             if (players.length === 0) {
-                playersList.innerHTML = '<div class="empty">No players yet.</div>';
+                playersList.innerHTML = '<div class="empty">' + (currentLang === 'zh' ? '暂无玩家。' : 'No players yet.') + '</div>';
             } else {
                 let html = '';
                 players.forEach((p, i) => {
@@ -693,25 +999,26 @@
                 playersList.innerHTML = html;
             }
             renderNetStatus(net);
+            renderTotals(totalUp, totalDown);
         }
         
         function renderNetStatus(net) {
             const netDiv = document.getElementById('netStatus');
             if (players.length === 0) { netDiv.innerHTML = ''; return; }
-            if (Math.abs(net) < 1) netDiv.innerHTML = '<div class="net-status even">✅ Table is EVEN</div>';
-            else if (net > 0) netDiv.innerHTML = `<div class="net-status win">📈 Table WINNING by ${Math.round(net).toLocaleString()}</div>`;
-            else netDiv.innerHTML = `<div class="net-status loss">📉 Table LOSING by ${Math.round(Math.abs(net)).toLocaleString()}</div>`;
+            if (Math.abs(net) < 1) netDiv.innerHTML = `<div class="net-status even">${t('tableEven')}</div>`;
+            else if (net > 0) netDiv.innerHTML = `<div class="net-status win">${t('tableWinning')} ${Math.round(net).toLocaleString()}</div>`;
+            else netDiv.innerHTML = `<div class="net-status loss">${t('tableLosing')} ${Math.round(Math.abs(net)).toLocaleString()}</div>`;
         }
         
         function renderTotals(totalUp, totalDown) {
             let totalsDiv = document.getElementById('totals');
             if (!totalsDiv) { totalsDiv = document.createElement('div'); totalsDiv.id = 'totals'; totalsDiv.className = 'totals'; document.body.appendChild(totalsDiv); }
-            totalsDiv.innerHTML = `<div class="total-item"><div class="label">Total Up</div><div class="value">${Math.round(totalUp).toLocaleString()}</div></div><div class="total-item"><div class="label">Total Down</div><div class="value">${Math.round(totalDown).toLocaleString()}</div></div><div class="total-item"><div class="label">Net</div><div class="value">${Math.round(totalUp + totalDown).toLocaleString()}</div></div>`;
+            totalsDiv.innerHTML = `<div class="total-item"><div class="label">${t('totalUp')}</div><div class="value">${Math.round(totalUp).toLocaleString()}</div></div><div class="total-item"><div class="label">${t('totalDown')}</div><div class="value">${Math.round(totalDown).toLocaleString()}</div></div><div class="total-item"><div class="label">${t('net')}</div><div class="value">${Math.round(totalUp + totalDown).toLocaleString()}</div></div>`;
         }
         
         function saveSession() {
             const { net } = calculateTotals();
-            if (Math.abs(net) >= 1) { alert('Cannot save: Table imbalance!'); return; }
+            if (Math.abs(net) >= 1) { alert(t('alertCannotSave')); return; }
             
             const sessionData = { 
                 id: Date.now(), 
@@ -723,40 +1030,35 @@
                 communityId: currentCommunity?.id || 'local'
             };
             
-            // Save to cloud + local
             saveSessionToCloud(sessionData);
             
             players = []; confirmCheck.checked = false; saveBtn.disabled = true;
-            renderPlayers(); renderHistory(); renderStats(); alert('Session saved!');
+            renderPlayers(); renderHistory(); renderStats(); alert(t('alertSessionSaved'));
         }
         
         function renderHistory() {
             const historyList = document.getElementById('historyList');
             
-            // Show blank if not logged in
             if (!currentCommunity) { 
-                historyList.innerHTML = '<div class="empty">Please login to view history</div>'; 
+                historyList.innerHTML = `<div class="empty">${t('loginToViewHistory')}</div>`; 
                 return; 
             }
             
             const communitySessions = getCommunitySessions();
-            console.log('Rendering history, sessions:', communitySessions.length);
             
-            if (communitySessions.length === 0) { historyList.innerHTML = '<div class="empty">No sessions recorded yet.</div>'; return; }
+            if (communitySessions.length === 0) { historyList.innerHTML = `<div class="empty">${t('noHistory')}</div>`; return; }
             let html = '';
             communitySessions.forEach((session, idx) => {
                 let biggestWinner = { name: '', pnl: -Infinity };
                 session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl }; });
-                console.log('Session', idx, 'id:', session.id, 'type:', typeof session.id);
-                html += `<div class="history-item" data-id="${session.id}" onclick="openEditModal('${session.id}', true)"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} players</div></div><div class="history-winner"><div class="label">Biggest Winner</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
+                html += `<div class="history-item" data-id="${session.id}" onclick="openEditModal('${session.id}', true)"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} ${t('players')}</div></div><div class="history-winner"><div class="label">${t('biggestWinner')}</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
             });
             historyList.innerHTML = html;
         }
         
         function openEditModal(sessionId, viewOnly = false) {
-            // Check if user is owner - only owners can edit
             if (!viewOnly && currentUser && currentUser.role && currentUser.role !== 'owner') {
-                alert('Only the community manager can edit sessions');
+                alert(t('alertOnlyOwnerEdit'));
                 return;
             }
             
@@ -768,11 +1070,11 @@
             document.getElementById('sessionModal').classList.add('active');
         }
         
-        function renderEditPlayers(players) {
+        function renderEditPlayers(playersArr) {
             let html = '';
             let totalUp = 0, totalDown = 0;
             
-            players.forEach((p, i) => {
+            playersArr.forEach((p, i) => {
                 const pnl = p.stack - p.buyIn;
                 if (pnl >= 0) totalUp += pnl;
                 else totalDown += Math.abs(pnl);
@@ -781,13 +1083,12 @@
                 html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><input type="number" value="${p.buyIn || 0}" id="editBuyIn_${i}"><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
             });
             
-            // Add total net row
             const net = totalUp - totalDown;
             const netClass = Math.abs(net) < 1 ? 'even' : (net >= 0 ? 'positive' : 'negative');
             const netText = Math.abs(net) < 1 ? '✅ EVEN' : (net >= 0 ? `+${Math.round(net)}` : Math.round(net));
-            html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>Total</div><div>${Math.round(totalUp + totalDown).toLocaleString()}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
+            html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>${t('totalRow')}</div><div>${Math.round(totalUp + totalDown).toLocaleString()}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
             
-            html += '<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">➕ Add Player</button>';
+            html += `<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">${t('addPlayerBtn')}</button>`;
             document.getElementById('editPlayersList').innerHTML = html;
         }
         
@@ -802,7 +1103,8 @@
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
-            session.players.push({ name: 'New Player', hands: 1, buyIn: baseBuyIn, stack: baseBuyIn });
+            const newPlayerName = currentLang === 'zh' ? '新玩家' : 'New Player';
+            session.players.push({ name: newPlayerName, hands: 1, buyIn: baseBuyIn, stack: baseBuyIn });
             renderEditPlayers(session.players);
         }
         
@@ -810,7 +1112,6 @@
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
             
-            // Check if table is balanced - update name, buyIn, and stack
             session.players.forEach((p, i) => { 
                 p.name = document.getElementById('editName_' + i).value; 
                 p.buyIn = parseFloat(document.getElementById('editBuyIn_' + i).value) || 0;
@@ -822,31 +1123,28 @@
             const net = totalUp - totalDown;
             
             if (Math.abs(net) >= 1) {
-                alert('Cannot save: Table must be balanced! Current net: ' + net);
+                alert(t('alertCannotSaveBalance') + net);
                 return;
             }
             
             session.date = document.getElementById('editDate').value;
             session.totalUp = totalUp; session.totalDown = -totalDown; session.net = net;
             
-            // Save to cloud
             saveSessionToCloud(session);
             
             saveToLocalStorage();
-            closeModal('sessionModal'); renderHistory(); renderStats(); alert('Changes saved!');
+            closeModal('sessionModal'); renderHistory(); renderStats(); alert(t('alertChangesSaved'));
         }
         
         function deleteCurrentSession() {
-            // Check if user is owner
             if (!currentUser || currentUser.role !== 'owner') {
-                alert('Only the community manager can delete sessions');
+                alert(t('alertOnlyOwnerDelete'));
                 return;
             }
             
-            if (!confirm('Are you sure you want to delete this session?')) return;
+            if (!confirm(t('alertConfirmDelete'))) return;
             const sessionId = editingSessionId;
             
-            // Delete from cloud + local
             deleteSessionFromCloud(sessionId);
             
             sessions = sessions.filter(s => s.id !== sessionId);
@@ -863,16 +1161,14 @@
         function renderStats() {
             const statsDiv = document.getElementById('statsContent');
 
-            // Show blank if not logged in
             if (!currentCommunity) {
-                statsDiv.innerHTML = '<div class="empty">Please login to view stats</div>';
+                statsDiv.innerHTML = `<div class="empty">${t('loginToViewStats')}</div>`;
                 return;
             }
 
             const communitySessions = getCommunitySessions();
-            if (communitySessions.length === 0) { statsDiv.innerHTML = '<div class="empty">No data yet. Play some sessions!</div>'; return; }
+            if (communitySessions.length === 0) { statsDiv.innerHTML = `<div class="empty">${t('noDataYet')}</div>`; return; }
 
-            // ── Core player stats accumulation ──────────────────────────────────
             const playerStats = {};
             let totalSessions = communitySessions.length;
             let highestSessionWin = 0, highestSessionWinName = '';
@@ -902,15 +1198,12 @@
                     ps.sessionPnls.push(pnl);
                     if (pnl > 0) ps.wins++;
                     else if (pnl < 0) ps.losses++;
-                    // Comeback King: hands >= 3 but still won
                     if ((p.hands || 1) >= 3 && pnl > 0) ps.comebackCount++;
-                    // Session size impact
                     if (sessionPlayerCount <= 6) { ps.smallTablePnl += pnl; ps.smallTableSessions++; }
                     else { ps.largeTablePnl += pnl; ps.largeTableSessions++; }
                 });
             });
 
-            // ── Streaks (chronological order) ──────────────────────────────────
             const sortedChron = [...communitySessions].sort((a, b) => new Date(a.date) - new Date(b.date));
             Object.keys(playerStats).forEach(playerName => {
                 let curW = 0, maxW = 0, curL = 0, maxL = 0;
@@ -936,7 +1229,6 @@
                 playerStats[playerName].currentStreak = lastStreakCount;
             });
 
-            // ── Overall streak leaders ──────────────────────────────────────────
             let longestWinStreak = { name: '', count: 0 };
             let longestLossStreak = { name: '', count: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
@@ -944,7 +1236,6 @@
                 if (stats.maxLossStreak > longestLossStreak.count) longestLossStreak = { name, count: stats.maxLossStreak };
             });
 
-            // ── ROI & Avg P&L ───────────────────────────────────────────────────
             let bestROI = { name: '', roi: -Infinity };
             let bestAvgPnl = { name: '', avg: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => {
@@ -956,91 +1247,69 @@
                 }
             });
 
-            // ── Shark Index (5+ sessions) ───────────────────────────────────────
             let topShark = { name: '', score: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => {
                 if (stats.sessions >= 5) {
                     const winRate = stats.wins / stats.sessions;
-                    // Normalise ROI to 0-1 range (cap at ±200%)
-                    const roiNorm = Math.max(0, Math.min(1, (stats.roi + 200) / 400));
-                    // Consistency: low variance = high score; use std dev of session P&Ls
-                    const mean = stats.avgPnl;
-                    const variance = stats.sessionPnls.reduce((s, v) => s + (v - mean) ** 2, 0) / stats.sessionPnls.length;
-                    const stdDev = Math.sqrt(variance);
-                    // Normalise consistency: lower stdDev relative to |mean| is better
-                    const cv = mean !== 0 ? Math.abs(stdDev / mean) : 10;
-                    const consistencyScore = Math.max(0, 1 - Math.min(cv, 3) / 3);
-                    stats.sharkIndex = Math.round((winRate * 40 + roiNorm * 30 + consistencyScore * 30) * 10) / 10;
-                    if (stats.sharkIndex > topShark.score) topShark = { name, score: stats.sharkIndex };
-                } else {
-                    stats.sharkIndex = null;
+                    const consistency = 1 - (stats.sessionPnls.reduce((s, v) => s + Math.abs(v), 0) / (stats.buyIn || 1));
+                    const score = (winRate * 60) + (Math.max(0, consistency) * 20) + (Math.min(stats.roi / 10, 20));
+                    stats.sharkScore = Math.min(100, Math.max(0, score));
+                    if (stats.sharkScore > topShark.score) topShark = { name, score: stats.sharkScore };
                 }
             });
 
-            // ── Comeback King ───────────────────────────────────────────────────
             let comebackKing = { name: '', count: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
                 if (stats.comebackCount > comebackKing.count) comebackKing = { name, count: stats.comebackCount };
             });
 
-            // ── Highest buy-in ──────────────────────────────────────────────────
             let highestBuyIn = 0;
-            communitySessions.forEach(session => session.players.forEach(p => { if (p.buyIn > highestBuyIn) highestBuyIn = p.buyIn; }));
+            communitySessions.forEach(s => s.players.forEach(p => { if (p.buyIn > highestBuyIn) highestBuyIn = p.buyIn; }));
 
-            // ── Win rate leader (5+ sessions) ───────────────────────────────────
             let highestWinRatePlayer = { name: '', rate: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
-                if (stats.sessions >= 5) {
+                if (stats.sessions >= 3) {
                     const rate = Math.round((stats.wins / stats.sessions) * 100);
                     if (rate > highestWinRatePlayer.rate) highestWinRatePlayer = { name, rate };
                 }
             });
 
-            // ── Highest accumulative winner ─────────────────────────────────────
             let highestWinner = { name: '', net: -Infinity };
             Object.entries(playerStats).forEach(([name, stats]) => { if (stats.net > highestWinner.net) highestWinner = { name, net: stats.net }; });
 
-            // ════════════════════════════════════════════════════════════════════
-            // BUILD HTML
-            // ════════════════════════════════════════════════════════════════════
-
-            // ── Row 1: existing summary cards ───────────────────────────────────
             let html = `<div class="stats-summary">
-                <div class="stat-card"><div class="label">Total Sessions</div><div class="value">${totalSessions}</div></div>
-                <div class="stat-card"><div class="label">Total Players</div><div class="value">${Object.keys(playerStats).length}</div></div>
-                <div class="stat-card"><div class="label">Highest Buy-in</div><div class="value">${highestBuyIn.toLocaleString()}</div></div>
-                <div class="stat-card"><div class="label">🏆 Highest Win Rate</div><div class="value">${highestWinRatePlayer.name ? highestWinRatePlayer.name + ' (' + highestWinRatePlayer.rate + '%)' : '-'}</div></div>
-                <div class="stat-card"><div class="label">🏆 Best Win Streak</div><div class="value">${longestWinStreak.name ? longestWinStreak.name + ' (' + longestWinStreak.count + ')' : '-'}</div></div>
-                <div class="stat-card"><div class="label">📉 Worst Loss Streak</div><div class="value negative">${longestLossStreak.name ? longestLossStreak.name + ' (' + longestLossStreak.count + ')' : '-'}</div></div>
-                <div class="stat-card full"><div class="label">🏆 Highest Accumulative Winner</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
+                <div class="stat-card"><div class="label">${t('totalSessions')}</div><div class="value">${totalSessions}</div></div>
+                <div class="stat-card"><div class="label">${t('totalPlayers')}</div><div class="value">${Object.keys(playerStats).length}</div></div>
+                <div class="stat-card"><div class="label">${t('highestBuyIn')}</div><div class="value">${highestBuyIn.toLocaleString()}</div></div>
+                <div class="stat-card"><div class="label">${t('highestWinRate')}</div><div class="value">${highestWinRatePlayer.name ? highestWinRatePlayer.name + ' (' + highestWinRatePlayer.rate + '%)' : '-'}</div></div>
+                <div class="stat-card"><div class="label">${t('bestWinStreak')}</div><div class="value">${longestWinStreak.name ? longestWinStreak.name + ' (' + longestWinStreak.count + ')' : '-'}</div></div>
+                <div class="stat-card"><div class="label">${t('worstLossStreak')}</div><div class="value negative">${longestLossStreak.name ? longestLossStreak.name + ' (' + longestLossStreak.count + ')' : '-'}</div></div>
+                <div class="stat-card full"><div class="label">${t('highestAccumWinner')}</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
             </div>`;
 
-            // ── Row 2: New stat cards (ROI, Avg P&L, Biggest Win/Loss) ───────────
             html += `<div class="stats-summary">
-                <div class="stat-card"><div class="label">📈 Best ROI</div><div class="value positive">${bestROI.name ? bestROI.name : '-'}</div><div class="sub">${bestROI.name ? (bestROI.roi >= 0 ? '+' : '') + bestROI.roi.toFixed(1) + '%' : ''}</div></div>
-                <div class="stat-card"><div class="label">💰 Best Avg P&amp;L/Session</div><div class="value positive">${bestAvgPnl.name ? bestAvgPnl.name : '-'}</div><div class="sub">${bestAvgPnl.name ? (bestAvgPnl.avg >= 0 ? '+' : '') + Math.round(bestAvgPnl.avg).toLocaleString() : ''}</div></div>
-                <div class="stat-card"><div class="label">🦈 Shark Index</div><div class="value gold">${topShark.name ? topShark.name : '-'}</div><div class="sub">${topShark.name ? topShark.score.toFixed(1) + '/100' : '5+ sessions needed'}</div></div>
-                <div class="stat-card"><div class="label">🎉 Comeback King</div><div class="value gold">${comebackKing.name ? comebackKing.name : '-'}</div><div class="sub">${comebackKing.name ? comebackKing.count + 'x multi-buyin wins' : '-'}</div></div>
-                <div class="stat-card"><div class="label">🚀 Biggest Single Win</div><div class="value positive">${highestSessionWinName || '-'}</div><div class="sub">${highestSessionWin > 0 ? '+' + Math.round(highestSessionWin).toLocaleString() : ''}</div></div>
-                <div class="stat-card"><div class="label">💀 Biggest Single Loss</div><div class="value negative">${highestSessionLossName || '-'}</div><div class="sub">${highestSessionLoss < 0 ? Math.round(highestSessionLoss).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('bestROI')}</div><div class="value positive">${bestROI.name ? bestROI.name : '-'}</div><div class="sub">${bestROI.name ? (bestROI.roi >= 0 ? '+' : '') + bestROI.roi.toFixed(1) + '%' : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('bestAvgPnl')}</div><div class="value positive">${bestAvgPnl.name ? bestAvgPnl.name : '-'}</div><div class="sub">${bestAvgPnl.name ? (bestAvgPnl.avg >= 0 ? '+' : '') + Math.round(bestAvgPnl.avg).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('sharkIndex')}</div><div class="value gold">${topShark.name ? topShark.name : '-'}</div><div class="sub">${topShark.name ? topShark.score.toFixed(1) + '/100' : t('fiveSessionsNeeded')}</div></div>
+                <div class="stat-card"><div class="label">${t('comebackKing')}</div><div class="value gold">${comebackKing.name ? comebackKing.name : '-'}</div><div class="sub">${comebackKing.name ? comebackKing.count + t('xMultiBuyinWins') : '-'}</div></div>
+                <div class="stat-card"><div class="label">${t('biggestSingleWin')}</div><div class="value positive">${highestSessionWinName || '-'}</div><div class="sub">${highestSessionWin > 0 ? '+' + Math.round(highestSessionWin).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('biggestSingleLoss')}</div><div class="value negative">${highestSessionLossName || '-'}</div><div class="sub">${highestSessionLoss < 0 ? Math.round(highestSessionLoss).toLocaleString() : ''}</div></div>
             </div>`;
 
-            // ── Accumulated Winnings Chart ───────────────────────────────────────
             const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= 3).sort();
             html += `<div class="chart-container">
-                <div class="chart-title">📈 Accumulated Winnings</div>
+                <div class="chart-title">${t('accumulatedWinnings')}</div>
                 <div class="chart-filter">
                     <select id="playerFilter" onchange="renderPnLChart()">
-                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${name}">${name} (${playerStats[name].sessions} sessions)</option>`).join('') : '<option value="">No players with 3+ sessions</option>'}
+                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${name}">${name} (${playerStats[name].sessions} ${t('sessionsCol')})</option>`).join('') : `<option value="">${t('noPlayersWithSessions')}</option>`}
                     </select>
                 </div>
                 <div class="line-chart" id="pnlChart"></div>
             </div>`;
 
-            // ── Monthly / Quarterly Trends Chart ────────────────────────────────
-            const allPlayerNamesForMonthly = ['All Players', ...Object.keys(playerStats).sort()];
+            const allPlayerNamesForMonthly = [currentLang === 'zh' ? '全部玩家' : 'All Players', ...Object.keys(playerStats).sort()];
             html += `<div class="chart-container">
-                <div class="chart-title">📅 Monthly P&amp;L Trends</div>
+                <div class="chart-title">${t('monthlyPnlTrends')}</div>
                 <div class="chart-filter">
                     <select id="monthlyPlayerFilter" onchange="renderMonthlyChart()">
                         ${allPlayerNamesForMonthly.map(name => `<option value="${name}">${name}</option>`).join('')}
@@ -1049,13 +1318,12 @@
                 <div id="monthlyBarChart" style="overflow-x:auto;"></div>
             </div>`;
 
-            // ── Extended Player Performance Table ───────────────────────────────
             html += `<div class="player-stats">
-                <h3>🏆 Player Performance (Click to view)</h3>
+                <h3>${t('playerPerformance')}</h3>
                 <div class="session-filter">
-                    <label style="font-size:12px;color:var(--text-dim);">Min Sessions:</label>
+                    <label style="font-size:12px;color:var(--text-dim);">${t('minSessions')}</label>
                     <select id="minSessionFilter" onchange="filterPlayerTable()">
-                        <option value="0">All</option>
+                        <option value="0">${t('allFilter')}</option>
                         <option value="3">3+</option>
                         <option value="5">5+</option>
                         <option value="10">10+</option>
@@ -1064,7 +1332,7 @@
                 </div>
                 <div style="overflow-x:auto;">
                 <div class="player-stat-row-ext header">
-                    <div>Player</div><div>Sessions</div><div>Win %</div><div>Net</div><div>Streak</div>
+                    <div>${t('playerCol')}</div><div>${t('sessionsCol')}</div><div>${t('winPctCol')}</div><div>${t('netCol')}</div><div>${t('streakCol')}</div>
                 </div>`;
 
             const sortedPlayers = Object.entries(playerStats).sort((a, b) => b[1].net - a[1].net);
@@ -1072,7 +1340,6 @@
             sortedPlayers.forEach(([name, stats]) => {
                 const winRate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
                 const pnlClass = stats.net >= 0 ? 'pnl-positive' : 'pnl-negative';
-                // Hot/Cold streak indicator
                 let streakHtml = '<span class="streak-neutral">—</span>';
                 if (stats.currentStreakType === 'W' && stats.currentStreak > 0) {
                     streakHtml = `<span class="streak-hot">🔥 ${stats.currentStreak}W</span>`;
@@ -1090,50 +1357,46 @@
 
             html += '</div></div>';
 
-            // ── Head-to-Head Section ─────────────────────────────────────────────
             const h2hPlayerList = Object.keys(playerStats).sort();
             const h2hOpts = h2hPlayerList.map(n => `<option value="${n}">${n}</option>`).join('');
             html += `<div class="h2h-section">
-                <h3>⚔️ Head-to-Head</h3>
+                <h3>${t('headToHead')}</h3>
                 <div class="h2h-selectors">
                     <select id="h2hPlayer1" onchange="renderH2H()">${h2hOpts}</select>
                     <select id="h2hPlayer2" onchange="renderH2H()">${h2hOpts}</select>
                 </div>
-                <div id="h2hResult" class="h2h-result"><div style="color:var(--text-dim);font-size:13px;">Select two different players to compare</div></div>
+                <div id="h2hResult" class="h2h-result"><div style="color:var(--text-dim);font-size:13px;">${t('selectTwoDiff')}</div></div>
             </div>`;
 
             statsDiv.innerHTML = html;
 
-            // Set default different players for H2H
             if (h2hPlayerList.length >= 2) {
                 document.getElementById('h2hPlayer2').value = h2hPlayerList[1];
             }
 
-            // Render charts after HTML is set
             setTimeout(() => { renderPnLChart(); renderMonthlyChart(); renderH2H(); }, 0);
         }
 
         function filterPlayerTable() {
             const minSessions = parseInt(document.getElementById('minSessionFilter')?.value || '0');
             document.querySelectorAll('.player-row-filterable').forEach(row => {
-                const sessions = parseInt(row.getAttribute('data-sessions') || '0');
-                row.style.display = sessions >= minSessions ? '' : 'none';
+                const s = parseInt(row.getAttribute('data-sessions') || '0');
+                row.style.display = s >= minSessions ? '' : 'none';
             });
         }
 
-        // ── Monthly Bar Chart ────────────────────────────────────────────────────
         function renderMonthlyChart() {
             const container = document.getElementById('monthlyBarChart');
             if (!container) return;
-            const selectedPlayer = document.getElementById('monthlyPlayerFilter')?.value || 'All Players';
+            const selectedPlayer = document.getElementById('monthlyPlayerFilter')?.value || (currentLang === 'zh' ? '全部玩家' : 'All Players');
             const communitySessions = getCommunitySessions();
+            const allPlayersLabel = currentLang === 'zh' ? '全部玩家' : 'All Players';
 
-            // Aggregate by month
             const monthlyData = {};
             communitySessions.forEach(session => {
-                const month = session.date.slice(0, 7); // YYYY-MM
+                const month = session.date.slice(0, 7);
                 if (!monthlyData[month]) monthlyData[month] = 0;
-                if (selectedPlayer === 'All Players') {
+                if (selectedPlayer === allPlayersLabel) {
                     session.players.forEach(p => { monthlyData[month] += (p.stack - p.buyIn); });
                 } else {
                     const player = session.players.find(p => p.name === selectedPlayer);
@@ -1142,11 +1405,11 @@
             });
 
             const months = Object.keys(monthlyData).sort();
-            if (months.length === 0) { container.innerHTML = '<div class="empty">No data</div>'; return; }
+            if (months.length === 0) { container.innerHTML = `<div class="empty">${currentLang === 'zh' ? '暂无数据' : 'No data'}</div>`; return; }
 
             const values = months.map(m => monthlyData[m]);
             const maxAbs = Math.max(...values.map(Math.abs), 1);
-            const maxBarHeight = 120; // px
+            const maxBarHeight = 120;
 
             let barsHtml = '<div class="monthly-bar-chart">';
             months.forEach((month, i) => {
@@ -1154,8 +1417,8 @@
                 const barH = Math.max(2, Math.round((Math.abs(val) / maxAbs) * maxBarHeight));
                 const cls = val >= 0 ? 'positive' : 'negative';
                 const valStr = val >= 0 ? '+' + Math.round(val / 1000) + 'k' : Math.round(val / 1000) + 'k';
-                const label = month.slice(5); // MM
-                const yearLabel = month.slice(2, 4); // YY
+                const label = month.slice(5);
+                const yearLabel = month.slice(2, 4);
                 barsHtml += `<div class="monthly-bar">
                     <div class="monthly-bar-value ${cls}">${valStr}</div>
                     <div class="monthly-bar-fill ${cls}" style="height:${barH}px;"></div>
@@ -1166,7 +1429,6 @@
             container.innerHTML = barsHtml;
         }
 
-        // ── Head-to-Head Calculator ──────────────────────────────────────────────
         function renderH2H() {
             const p1El = document.getElementById('h2hPlayer1');
             const p2El = document.getElementById('h2hPlayer2');
@@ -1177,7 +1439,7 @@
             const p2 = p2El.value;
 
             if (p1 === p2) {
-                resultEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;">Select two different players</div>';
+                resultEl.innerHTML = `<div style="color:var(--text-dim);font-size:13px;">${t('selectTwoDiffShort')}</div>`;
                 return;
             }
 
@@ -1201,7 +1463,7 @@
             });
 
             if (sharedSessions === 0) {
-                resultEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;">These players have never played in the same session</div>';
+                resultEl.innerHTML = `<div style="color:var(--text-dim);font-size:13px;">${t('neverPlayed')}</div>`;
                 return;
             }
 
@@ -1209,24 +1471,25 @@
             const p2WinClass = p2Wins > p1Wins ? 'winner' : 'loser';
             const p1PnlStr = (p1TotalPnl >= 0 ? '+' : '') + Math.round(p1TotalPnl).toLocaleString();
             const p2PnlStr = (p2TotalPnl >= 0 ? '+' : '') + Math.round(p2TotalPnl).toLocaleString();
+            const tiesStr = ties > 0 ? ' · ' + ties + ' ' + t('ties') : '';
 
             resultEl.innerHTML = `
                 <div class="h2h-vs">
                     <div class="h2h-player">
                         <div class="h2h-name">${p1}</div>
                         <div class="h2h-wins ${p1WinClass}">${p1Wins}</div>
-                        <div style="font-size:11px;color:var(--text-dim);">wins</div>
+                        <div style="font-size:11px;color:var(--text-dim);">${t('wins')}</div>
                         <div style="font-size:12px;margin-top:4px;color:${p1TotalPnl>=0?'var(--profit)':'var(--loss)'}">${p1PnlStr}</div>
                     </div>
                     <div class="h2h-divider">VS</div>
                     <div class="h2h-player">
                         <div class="h2h-name">${p2}</div>
                         <div class="h2h-wins ${p2WinClass}">${p2Wins}</div>
-                        <div style="font-size:11px;color:var(--text-dim);">wins</div>
+                        <div style="font-size:11px;color:var(--text-dim);">${t('wins')}</div>
                         <div style="font-size:12px;margin-top:4px;color:${p2TotalPnl>=0?'var(--profit)':'var(--loss)'}">${p2PnlStr}</div>
                     </div>
                 </div>
-                <div class="h2h-meta">${sharedSessions} shared sessions${ties > 0 ? ' · ' + ties + ' tie(s)' : ''}</div>
+                <div class="h2h-meta">${sharedSessions} ${t('sharedSessions')}${tiesStr}</div>
             `;
         }
         
@@ -1234,9 +1497,9 @@
             const container = document.getElementById('pnlChart');
             if (!container) return;
             
-            const selectedPlayer = document.getElementById('playerFilter')?.value || (playerNames.length > 0 ? playerNames[0] : null);
+            const playerFilterEl = document.getElementById('playerFilter');
+            const selectedPlayer = playerFilterEl?.value || null;
             
-            // Build cumulative winnings data
             const communitySessions = getCommunitySessions();
             const sortedSessions = [...communitySessions].sort((a, b) => new Date(a.date) - new Date(b.date));
             let cumulative = 0;
@@ -1254,16 +1517,14 @@
                 chartData.push({ date: session.date, pnl: sessionPnl, cumulative });
             });
             
-            if (chartData.length === 0) { container.innerHTML = '<div class="empty">No data</div>'; return; }
+            if (chartData.length === 0) { container.innerHTML = `<div class="empty">${currentLang === 'zh' ? '暂无数据' : 'No data'}</div>`; return; }
             
-            // Better SVG chart with hover tooltips
             const width = container.clientWidth || 350;
             const height = 200;
             const padding = { top: 20, right: 20, bottom: 40, left: 60 };
             
             const minCum = Math.min(...chartData.map(d => d.cumulative), 0);
             const maxCum = Math.max(...chartData.map(d => d.cumulative), 0);
-            // Add padding to range
             const range = (maxCum - minCum) || 1;
             const yMin = minCum - range * 0.1;
             const yMax = maxCum + range * 0.1;
@@ -1286,10 +1547,8 @@
             const lineColor = isPositive ? '#f6465d' : '#0b8a4e';
             const fillColor = isPositive ? 'rgba(246, 70, 93, 0.15)' : 'rgba(11, 138, 78, 0.15)';
             
-            // Area fill
             let areaD = pathD + ` L${getX(chartData.length - 1)},${getY(0)} L${getX(0)},${getY(0)} Z`;
             
-            // Grid lines
             let gridLines = '';
             const numGridLines = 5;
             for (let i = 0; i <= numGridLines; i++) {
@@ -1299,16 +1558,13 @@
                 gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" fill="#848e9c" font-size="10">${val >= 0 ? '+' : ''}${Math.round(val/1000)}k</text>`;
             }
             
-            // X-axis labels
             let xLabels = '';
-            // Show year-month on X-axis
             chartData.forEach((d, i) => {
                 if (chartData.length <= 5 || i === 0 || i === chartData.length - 1 || i === Math.floor(chartData.length / 2)) {
                     xLabels += `<text x="${getX(i)}" y="${height - 10}" text-anchor="middle" fill="#848e9c" font-size="10">${d.date.slice(0, 7)}</text>`;
                 }
             });
             
-            // Hover dots with tooltips
             let hoverElements = '';
             chartData.forEach((d, i) => {
                 const x = getX(i);
@@ -1326,6 +1582,7 @@
                     <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                     ${chartData.map((d, i) => `<circle cx="${getX(i)}" cy="${getY(d.cumulative)}" r="4" fill="${lineColor}"/>`).join('')}
                     ${xLabels}
+                    ${hoverElements}
                 </svg>
                 <div id="chartTooltip" style="position:absolute;background:#1a1d29;border:1px solid #4a5568;border-radius:6px;padding:8px 12px;font-size:12px;color:#eaecef;pointer-events:none;display:none;z-index:100;">
                     <div id="tooltipDate" style="color:#848e9c;"></div>
@@ -1356,7 +1613,6 @@
         function showPlayerDetail(playerName) {
             document.getElementById('playerModalTitle').textContent = playerName;
 
-            // Calculate stats for this player
             const playerSessions = [];
             let wins = 0, losses = 0;
             let totalBuyIn = 0;
@@ -1370,7 +1626,6 @@
                     if (pnl > 0) wins++;
                     else if (pnl < 0) losses++;
                     totalBuyIn += player.buyIn;
-                    // Session size impact
                     if (session.players.length <= 6) { smallPnl += pnl; smallCount++; }
                     else { largePnl += pnl; largeCount++; }
                     playerSessions.push({ date: session.date, pnl, buyIn: player.buyIn, final: player.stack, hands: player.hands || 1 });
@@ -1386,7 +1641,6 @@
             const roi = totalBuyIn > 0 ? (totalNet / totalBuyIn) * 100 : 0;
             const avgPnl = totalSessions > 0 ? totalNet / totalSessions : 0;
 
-            // Calculate streaks (chronological)
             const chronSessions = [...playerSessions].sort((a, b) => new Date(a.date) - new Date(b.date));
             let curStreak = 0, maxWinStreak = 0, maxLossStreak = 0, streakType = '', curStreakCount = 0, curStreakTypeLabel = '';
             chronSessions.forEach(s => {
@@ -1407,45 +1661,42 @@
             document.getElementById('playerTotalNet').textContent = (totalNet >= 0 ? '+' : '') + Math.round(totalNet).toLocaleString();
             document.getElementById('playerTotalNet').className = 'value ' + (totalNet >= 0 ? 'positive' : 'negative');
 
-            // Current streak indicator
             let streakIndicator = '';
             if (curStreakTypeLabel === 'W') streakIndicator = `<span class="streak-hot">🔥 ${curStreakCount}W streak</span>`;
             else if (curStreakTypeLabel === 'L') streakIndicator = `<span class="streak-cold">🧊 ${curStreakCount}L streak</span>`;
 
-            // Session size impact
             const smallAvg = smallCount > 0 ? Math.round(smallPnl / smallCount) : null;
             const largeAvg = largeCount > 0 ? Math.round(largePnl / largeCount) : null;
             const sizeImpactHtml = `
                 <div style="margin:10px 0;padding:10px;background:var(--bg);border-radius:8px;">
-                    <div style="font-size:12px;color:var(--gold);font-weight:bold;margin-bottom:8px;">📊 Session Size Impact</div>
+                    <div style="font-size:12px;color:var(--gold);font-weight:bold;margin-bottom:8px;">${t('sessionSizeImpact')}</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <div class="mini-stat"><div class="label">Small Table (≤6)</div><div class="value ${smallAvg !== null ? (smallAvg >= 0 ? 'positive' : 'negative') : ''}">${smallAvg !== null ? (smallAvg >= 0 ? '+' : '') + smallAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${smallCount} sessions</div></div>
-                        <div class="mini-stat"><div class="label">Large Table (>6)</div><div class="value ${largeAvg !== null ? (largeAvg >= 0 ? 'positive' : 'negative') : ''}">${largeAvg !== null ? (largeAvg >= 0 ? '+' : '') + largeAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${largeCount} sessions</div></div>
+                        <div class="mini-stat"><div class="label">${t('smallTable')}</div><div class="value ${smallAvg !== null ? (smallAvg >= 0 ? 'positive' : 'negative') : ''}">${smallAvg !== null ? (smallAvg >= 0 ? '+' : '') + smallAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${smallCount} ${t('sessionsCol')}</div></div>
+                        <div class="mini-stat"><div class="label">${t('largeTable')}</div><div class="value ${largeAvg !== null ? (largeAvg >= 0 ? 'positive' : 'negative') : ''}">${largeAvg !== null ? (largeAvg >= 0 ? '+' : '') + largeAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${largeCount} ${t('sessionsCol')}</div></div>
                     </div>
                 </div>`;
 
-            // Show detailed stats
             let statsHtml = `<div class="player-stats-grid">
-                <div class="mini-stat"><div class="label">Win Rate</div><div class="value ${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div></div>
-                <div class="mini-stat"><div class="label">Wins</div><div class="value positive">${wins}</div></div>
-                <div class="mini-stat"><div class="label">Losses</div><div class="value negative">${losses}</div></div>
-                <div class="mini-stat"><div class="label">Best Streak</div><div class="value">${maxWinStreak}</div></div>
-                <div class="mini-stat"><div class="label">Worst Streak</div><div class="value negative">${maxLossStreak}</div></div>
-                <div class="mini-stat"><div class="label">ROI %</div><div class="value ${roi >= 0 ? 'positive' : 'negative'}">${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</div></div>
-                <div class="mini-stat"><div class="label">Avg P&amp;L/Session</div><div class="value ${avgPnl >= 0 ? 'positive' : 'negative'}">${avgPnl >= 0 ? '+' : ''}${Math.round(avgPnl).toLocaleString()}</div></div>
-                <div class="mini-stat"><div class="label">Avg Buy-in</div><div class="value">${Math.round(avgBuyIn).toLocaleString()}</div></div>
-                <div class="mini-stat"><div class="label">Current Streak</div><div class="value">${streakIndicator || '<span style="color:var(--text-dim)">—</span>'}</div></div>
+                <div class="mini-stat"><div class="label">${t('winRate')}</div><div class="value ${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div></div>
+                <div class="mini-stat"><div class="label">${t('winsLabel')}</div><div class="value positive">${wins}</div></div>
+                <div class="mini-stat"><div class="label">${t('lossesLabel')}</div><div class="value negative">${losses}</div></div>
+                <div class="mini-stat"><div class="label">${t('bestStreak')}</div><div class="value">${maxWinStreak}</div></div>
+                <div class="mini-stat"><div class="label">${t('worstStreak')}</div><div class="value negative">${maxLossStreak}</div></div>
+                <div class="mini-stat"><div class="label">${t('roiPct')}</div><div class="value ${roi >= 0 ? 'positive' : 'negative'}">${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</div></div>
+                <div class="mini-stat"><div class="label">${t('avgPnlSession')}</div><div class="value ${avgPnl >= 0 ? 'positive' : 'negative'}">${avgPnl >= 0 ? '+' : ''}${Math.round(avgPnl).toLocaleString()}</div></div>
+                <div class="mini-stat"><div class="label">${t('avgBuyIn')}</div><div class="value">${Math.round(avgBuyIn).toLocaleString()}</div></div>
+                <div class="mini-stat"><div class="label">${t('currentStreak')}</div><div class="value">${streakIndicator || '<span style="color:var(--text-dim)">—</span>'}</div></div>
             </div>
             ${sizeImpactHtml}`;
 
-            let html = '<div class="player-detail-header" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;"><div>Date</div><div>Buy-in</div><div>Stack</div><div>Net</div></div>';
+            let html = `<div class="player-detail-header" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;"><div>${t('dateCol')}</div><div>${t('buyInCol')}</div><div>${t('stackCol')}</div><div>P&L</div></div>`;
             playerSessions.forEach(s => {
                 const pnlClass = s.pnl >= 0 ? 'positive' : 'negative';
                 const pnlPrefix = s.pnl >= 0 ? '+' : '';
                 html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>${Math.round(s.buyIn).toLocaleString()}</div><div>${Math.round(s.final).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`;
             });
 
-            document.getElementById('playerSessionsList').innerHTML = statsHtml + (html || '<div class="empty">No sessions</div>');
+            document.getElementById('playerSessionsList').innerHTML = statsHtml + (html || `<div class="empty">${t('noSessions')}</div>`);
             document.getElementById('playerModal').classList.add('active');
         }
         
@@ -1456,12 +1707,12 @@
             event.target.classList.add('active');
             if (pageName === 'history') renderHistory();
             if (pageName === 'stats') renderStats();
+            if (pageName === 'login') renderLoginPage();
         }
         
         renderPlayers(); renderHistory();
         newPlayerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addPlayer(); });
         
-        // Initialize community selector
         renderCommunitySelector();
         renderLoginPage();
         
@@ -1469,67 +1720,65 @@
             const loginDiv = document.getElementById('loginContent');
             
             if (!currentCommunity) {
-                // Show login form
                 loginDiv.innerHTML = `
                     <div class="login-container">
                         <div class="login-header">
                             <h2>🃏 PokerGuys</h2>
-                            <p>Join or create a poker community</p>
+                            <p>${t('joinOrCreate')}</p>
                         </div>
                         
                         <div class="login-form">
-                            <input type="text" id="loginName" placeholder="Your Name" value="${localStorage.getItem('pokerUserName') || ''}">
-                            <input type="text" id="newCommunityNameInput" placeholder="Community Name (for new community)">
-                            <input type="text" id="loginCode" placeholder="Community Code (6 chars)" maxlength="6" style="text-transform: uppercase;">
-                            <button class="btn-login" onclick="loginWithCommunity()">🚀 Join Community</button>
+                            <input type="text" id="loginName" placeholder="${t('yourName')}" value="${localStorage.getItem('pokerUserName') || ''}">
+                            <input type="text" id="newCommunityNameInput" placeholder="${t('communityNamePlaceholder')}">
+                            <input type="text" id="loginCode" placeholder="${t('communityCodePlaceholder')}" maxlength="6" style="text-transform: uppercase;">
+                            <button class="btn-login" onclick="loginWithCommunity()">${t('joinCommunity')}</button>
                         </div>
                         
                         <div style="text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 20px;">
-                            <p>Don't have a code?</p>
-                            <p>Enter any 6-character code to create a new community!</p>
+                            <p>${t('noCode')}</p>
+                            <p>${t('createWithCode')}</p>
                         </div>
                         
                         <div class="import-section">
-                            <h3>📸 Import from Screenshot</h3>
-                            <span class="developing-badge">🛠️ In Progress - Coming Soon</span>
+                            <h3>${t('importFromScreenshot')}</h3>
+                            <span class="developing-badge">${t('inProgress')}</span>
                             <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()" disabled>
                             <img id="importPreview" class="import-preview" alt="Preview">
                             <div id="importStatus" class="import-status"></div>
-                            <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn" disabled>🔍 Analyze & Import</button>
+                            <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn" disabled>${t('analyzeImport')}</button>
                         </div>
                     </div>
                 `;
             } else {
-                // Show community info
                 loginDiv.innerHTML = `
                     <div class="login-container">
                         <div class="login-header">
                             <h2>👤 ${currentUser?.name || 'Player'}</h2>
-                            <p>Connected to cloud</p>
+                            <p>${t('connectedToCloud')}</p>
                         </div>
                         
                         <div class="community-info">
-                            <div style="font-size: 12px; color: var(--text-dim);">Community Code</div>
+                            <div style="font-size: 12px; color: var(--text-dim);">${t('communityCode')}</div>
                             <div class="code">${currentCommunity.code}</div>
                             <div style="font-size: 14px; font-weight: bold; color: var(--gold);">${currentCommunity.name}</div>
-                            <div class="members">${sessions.length} sessions synced</div>
+                            <div class="members">${sessions.length} ${t('sessionsSynced')}</div>
                         </div>
                         
-                        <button class="btn-community secondary" onclick="logout()" style="width: 100%;">🚪 Leave Community</button>
+                        <button class="btn-community secondary" onclick="logout()" style="width: 100%;">${t('leaveCommunity')}</button>
                         
                         <div style="margin-top: 30px; padding: 15px; background: var(--card); border-radius: 8px; font-size: 12px; color: var(--text-dim);">
-                            <strong>💡 Share this code with friends:</strong><br>
+                            <strong>${t('shareCode')}</strong><br>
                             <span style="font-size: 24px; color: var(--gold); font-weight: bold;">${currentCommunity.code}</span><br>
-                            They can join by entering this code and their name!
+                            ${t('theyCanJoin')}
                         </div>
                         
                         <div class="import-section">
-                            <h3>📸 Import from Screenshot</h3>
-                            <span class="developing-badge">🛠️ In Progress - Coming Soon</span>
+                            <h3>${t('importFromScreenshot')}</h3>
+                            <span class="developing-badge">${t('inProgress')}</span>
                             <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()" disabled>
                             <img id="importPreview" class="import-preview" alt="Preview">
                             <div id="importStatus" class="import-status"></div>
-                            <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn" disabled>🔍 Analyze & Import</button>
+                            <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn" disabled>${t('analyzeImport')}</button>
                         </div>
                     </div>
                 `;
@@ -1564,21 +1813,18 @@
             const btn = document.getElementById('analyzeBtn');
             
             if (!uploadedImageBase64) {
-                alert('Please upload a screenshot first');
+                alert(t('alertUploadFirst'));
                 return;
             }
             
             status.className = 'import-status loading';
-            status.textContent = '🔄 Analyzing screenshot... (This feature requires backend AI. For now, please use manual entry.)';
+            status.textContent = t('analyzingScreenshot');
             btn.disabled = true;
             
-            // For now, show a message about the AI feature
-            // In production, this would call an AI API endpoint
             setTimeout(() => {
                 status.className = 'import-status error';
-                status.innerHTML = '⚠️ AI Analysis requires backend setup.<br><br>For now, please manually enter the session data below:';
+                status.innerHTML = t('aiAnalysisError');
                 
-                // Show manual entry form
                 showManualEntryForm();
                 
                 btn.disabled = false;
@@ -1592,10 +1838,10 @@
             
             const formHtml = `
                 <div id="manualEntryForm" style="margin-top: 15px; padding: 15px; background: var(--bg); border-radius: 8px;">
-                    <h4 style="color: var(--gold); margin-bottom: 10px;">Manual Entry</h4>
+                    <h4 style="color: var(--gold); margin-bottom: 10px;">${t('manualEntry')}</h4>
                     <input type="date" id="sessionDate" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); margin-bottom: 10px;">
-                    <textarea id="manualPlayersData" style="width: 100%; height: 100px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 12px; margin-bottom: 10px;" placeholder="Paste player data (one per line):&#10;PlayerName, buyIn, stack&#10;Example:&#10;Johnny Ye, 6000, 5300&#10;Teng, 4000, 4360"></textarea>
-                    <button class="btn-community" onclick="importManualData()">Import Data</button>
+                    <textarea id="manualPlayersData" style="width: 100%; height: 100px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 13px; margin-bottom: 10px;" placeholder="${currentLang === 'zh' ? '格式：姓名,买入,筹码（每行一位玩家）\n例如：张三,1000,1500' : 'Format: Name,BuyIn,Stack (one player per line)\nExample: Alice,1000,1500'}"></textarea>
+                    <button class="btn-community" onclick="importManualData()">${t('importData')}</button>
                 </div>
             `;
             status.insertAdjacentHTML('beforeend', formHtml);
@@ -1605,11 +1851,11 @@
             const date = document.getElementById('sessionDate').value;
             const dataText = document.getElementById('manualPlayersData').value;
             
-            if (!date) { alert('Please enter a date'); return; }
-            if (!dataText.trim()) { alert('Please enter player data'); return; }
+            if (!date) { alert(t('alertEnterDate')); return; }
+            if (!dataText.trim()) { alert(t('alertEnterPlayerData')); return; }
             
             try {
-                const players = [];
+                const importedPlayers = [];
                 const lines = dataText.split('\n');
                 
                 lines.forEach(line => {
@@ -1619,16 +1865,15 @@
                         const buyIn = parseFloat(parts[1]) || 0;
                         const stack = parseFloat(parts[2]) || 0;
                         if (name && (buyIn > 0 || stack > 0)) {
-                            players.push({ name, buyIn, stack, hands: 1 });
+                            importedPlayers.push({ name, buyIn, stack, hands: 1 });
                         }
                     }
                 });
                 
-                if (players.length === 0) { alert('No valid player data found'); return; }
+                if (importedPlayers.length === 0) { alert(t('alertNoValidData')); return; }
                 
-                // Calculate totals
                 let totalUp = 0, totalDown = 0;
-                players.forEach(p => {
+                importedPlayers.forEach(p => {
                     const pnl = p.stack - p.buyIn;
                     if (pnl >= 0) totalUp += pnl;
                     else totalDown += pnl;
@@ -1638,21 +1883,20 @@
                 const session = {
                     id: Date.now(),
                     date: date,
-                    players: players,
+                    players: importedPlayers,
                     totalUp,
                     totalDown,
                     net: totalUp + totalDown,
-                    communityId: currentCommunityId
+                    communityId: currentCommunity?.id || 'local'
                 };
                 
                 communitySessions.unshift(session);
                 saveCommunitySessions(communitySessions);
                 
-                const status = document.getElementById('importStatus');
-                status.className = 'import-status success';
-                status.textContent = `✅ Successfully imported session with ${players.length} players!`;
+                const statusEl = document.getElementById('importStatus');
+                statusEl.className = 'import-status success';
+                statusEl.textContent = `✅ ${t('alertImportSuccess')} ${importedPlayers.length} ${t('alertImportSuccessPlayers')}`;
                 
-                // Reset form
                 document.getElementById('screenshotInput').value = '';
                 document.getElementById('importPreview').style.display = 'none';
                 uploadedImageBase64 = null;
@@ -1664,16 +1908,9 @@
                 alert('Error: ' + e.message);
             }
         }
-        
-        function showPage(pageName) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + pageName).classList.add('active');
-            event.target.classList.add('active');
-            if (pageName === 'history') renderHistory();
-            if (pageName === 'stats') renderStats();
-            if (pageName === 'login') renderLoginPage();
-        }
+
+        // Apply translations on load
+        applyTranslations();
     </script>
     
     <div class="footer">
