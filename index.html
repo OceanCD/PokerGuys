@@ -6,11 +6,11 @@
     <title>PokerGuys - Texas Hold'em Session Tracker</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        
+
         :root { --bg: #0b0e11; --card: #1e2329; --border: #2a2e39; --gold: #f0b90b; --profit: #f6465d; --loss: #0b8a4e; --text: #eaecef; --text-dim: #848e9c; }
-        
+
         body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; }
-        
+
         .header { text-align: center; padding: 15px 20px; border-bottom: 1px solid var(--border); background: var(--card); position: relative; }
         .header h1 { font-size: 24px; color: var(--gold); margin-bottom: 5px; }
         .header p { color: var(--text-dim); font-size: 12px; }
@@ -20,62 +20,62 @@
         /* Language toggle button */
         .lang-toggle { position: absolute; top: 15px; right: 15px; padding: 6px 12px; background: var(--bg); border: 1px solid var(--gold); border-radius: 20px; color: var(--gold); font-size: 12px; font-weight: bold; cursor: pointer; }
         .lang-toggle:hover { background: var(--gold); color: #000; }
-        
+
         .input-section { padding: 15px; background: var(--card); border-bottom: 1px solid var(--border); }
         .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
         .input-group { flex: 1; }
         .input-group label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; }
-        
+
         input[type="number"], input[type="text"], input[type="date"] { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; }
         input:focus { outline: none; border-color: var(--gold); }
-        
+
         .btn-add { width: 100%; padding: 14px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
+
         .table-header { display: grid; grid-template-columns: 3fr 3fr 2.5fr 2.5fr 0.5fr; padding: 12px 15px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--gold); }
-        
+
         .player-row { display: grid; grid-template-columns: 3fr 3fr 2.5fr 2.5fr 0.5fr; padding: 10px 15px; align-items: center; border-bottom: 1px solid var(--border); background: var(--bg); }
         .player-row:nth-child(even) { background: rgba(30, 35, 41, 0.5); }
-        
+
         .name-input { background: transparent !important; border: none !important; padding: 5px !important; font-size: 14px !important; color: var(--text) !important; width: 100%; }
-        
+
         .hands-control { display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-hands { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: #000; border: none; font-size: 18px; font-weight: bold; cursor: pointer; }
         .hands-num { font-weight: bold; min-width: 25px; text-align: center; }
-        
+
         .stack-input { background: transparent !important; border: none !important; padding: 5px !important; text-align: right; font-size: 14px !important; color: var(--gold) !important; width: 100%; }
-        
+
         .pnl { text-align: right; font-weight: bold; font-size: 14px; }
         .pnl.positive { color: var(--profit); }
         .pnl.negative { color: var(--loss); }
-        
+
         .btn-delete { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
-        
+
         .net-status { padding: 15px; margin: 10px 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px; }
         .net-status.even { background: rgba(11, 138, 78, 0.2); color: var(--loss); border: 1px solid var(--loss); }
         .net-status.win { background: rgba(246, 70, 93, 0.2); color: var(--profit); border: 1px solid var(--profit); }
         .net-status.loss { background: rgba(11, 138, 78, 0.2); color: var(--loss); border: 1px solid var(--loss); }
-        
+
         .totals { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 15px; background: var(--card); border-top: 2px solid var(--gold); position: fixed; bottom: 0; left: 0; right: 0; }
         .total-item { text-align: center; }
         .total-item .label { font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
         .total-item .value { font-size: 16px; font-weight: bold; }
-        
+
         .save-section { padding: 15px; padding-bottom: 90px; }
         .btn-save { width: 100%; padding: 16px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .btn-save:disabled { background: var(--border); color: var(--text-dim); }
-        
+
         .confirm-check { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: var(--card); border-radius: 8px; }
         .confirm-check input { width: 20px; height: 20px; }
-        
+
         .nav { display: flex; background: var(--card); border-top: 1px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; }
         .nav-item { flex: 1; padding: 12px; text-align: center; color: var(--text-dim); font-size: 12px; cursor: pointer; border: none; background: transparent; }
         .nav-item.active { color: var(--gold); }
-        
+
         .footer { text-align: center; padding: 15px; color: var(--text-dim); font-size: 11px; background: var(--bg); }
-        
+
         .page { display: none; }
         .page.active { display: block; }
-        
+
         .history-item { padding: 15px; background: var(--card); border-radius: 8px; margin: 10px 15px; cursor: pointer; }
         .history-header { display: flex; justify-content: space-between; align-items: center; }
         .history-date { font-weight: bold; color: var(--gold); }
@@ -83,25 +83,25 @@
         .history-winner { text-align: right; }
         .history-winner .label { font-size: 10px; color: var(--text-dim); }
         .history-winner .name { font-weight: bold; color: var(--profit); font-size: 14px; }
-        
+
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; overflow-y: auto; }
         .modal.active { display: block; }
         .modal-content { background: var(--bg); max-width: 600px; margin: 20px auto; border-radius: 12px; padding: 20px; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
         .modal-header h2 { color: var(--gold); font-size: 18px; }
         .modal-close { background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-dim); }
-        
+
         .modal-input { margin-bottom: 15px; }
         .modal-input label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; }
-        
+
         .player-edit-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr; gap: 5px; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: center; }
         .player-edit-row input { padding: 8px; font-size: 13px; }
         .player-edit-row .even { color: var(--gold); }
-        
+
         .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
         .btn-save-changes { flex: 1; padding: 12px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-delete-session { flex: 1; padding: 12px; background: transparent; color: var(--profit); border: 1px solid var(--profit); border-radius: 8px; font-weight: bold; cursor: pointer; }
-        
+
         .stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .stat-card { background: var(--card); padding: 15px; border-radius: 8px; text-align: center; }
         .stat-card.full { grid-column: span 2; }
@@ -109,21 +109,21 @@
         .stat-card .value { font-size: 18px; font-weight: bold; color: var(--gold); }
         .stat-card .value.positive { color: var(--profit); }
         .stat-card .value.negative { color: var(--loss); }
-        
+
         .chart-container { padding: 15px; background: var(--card); margin: 10px 15px; border-radius: 8px; }
         .chart-title { color: var(--gold); margin-bottom: 10px; font-size: 14px; }
         .chart-filter { margin-bottom: 10px; }
         .chart-filter select { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
-        
+
         .line-chart { width: 100%; height: 200px; position: relative; padding-top: 10px; }
         .line-chart svg { width: 100%; height: 100%; }
         .line-chart { position: relative; }
-        
+
         .player-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .mini-stat { background: var(--card); padding: 10px; border-radius: 6px; text-align: center; }
         .mini-stat .label { font-size: 10px; color: var(--text-dim); }
         .mini-stat .value { font-size: 14px; font-weight: bold; color: var(--gold); }
-        
+
         .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 150px; padding-top: 20px; }
         .bar { flex: 1; display: flex; flex-direction: column; align-items: center; }
         .bar-value { font-size: 10px; margin-bottom: 5px; color: var(--text-dim); }
@@ -131,59 +131,59 @@
         .bar-fill.positive { background: var(--profit); }
         .bar-fill.negative { background: var(--loss); }
         .bar-label { font-size: 10px; color: var(--text-dim); margin-top: 5px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
-        
+
         .player-stats { padding: 15px; }
         .player-stats h3 { color: var(--gold); margin-bottom: 10px; font-size: 16px; }
-        
+
         .player-stat-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
         .player-stat-row:hover { background: var(--card); }
         .player-stat-row.header { cursor: default; }
         .player-stat-row.header:hover { background: transparent; }
-        
+
         .player-detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .player-detail-row .date { color: var(--gold); font-weight: bold; }
         .player-detail-row .pnl { font-weight: bold; }
-        
+
         .empty { text-align: center; padding: 40px; color: var(--text-dim); }
-        
+
         .login-container { padding: 20px; }
         .login-header { text-align: center; margin-bottom: 30px; }
         .login-header h2 { color: var(--gold); font-size: 24px; margin-bottom: 10px; }
         .login-header p { color: var(--text-dim); font-size: 14px; }
-        
+
         .login-form { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         .login-form input { margin-bottom: 15px; }
         .login-form .btn-login { width: 100%; padding: 14px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
+
         .community-info { background: var(--card); padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
         .community-info .code { font-size: 32px; font-weight: bold; color: var(--gold); letter-spacing: 4px; margin: 10px 0; }
         .community-info .members { font-size: 12px; color: var(--text-dim); }
-        
+
         .community-list { margin-top: 20px; }
         .community-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--card); border-radius: 8px; margin-bottom: 10px; }
         .community-item .name { font-weight: bold; }
         .community-item .sessions { font-size: 12px; color: var(--text-dim); }
         .community-item.active { border: 2px solid var(--gold); }
-        
+
         .btn-community { width: 100%; padding: 14px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-community.secondary { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
-        
+
         .create-community-form { background: var(--card); padding: 20px; border-radius: 8px; margin-top: 20px; }
         .create-community-form h3 { color: var(--gold); margin-bottom: 15px; }
         .create-community-form input { margin-bottom: 15px; }
-        
+
         .import-section { background: var(--card); padding: 20px; border-radius: 8px; margin-top: 20px; }
         .import-section h3 { color: var(--gold); margin-bottom: 15px; }
-        .import-section .developing-badge { 
-            display: block; 
-            background: #f0b90b; 
-            color: #000; 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            font-size: 14px; 
-            text-align: center; 
-            margin-bottom: 10px; 
+        .import-section .developing-badge {
+            display: block;
+            background: #f0b90b;
+            color: #000;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
         }
         .import-section .hint { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
         .import-section input[type="file"] { margin-bottom: 10px; }
@@ -192,7 +192,7 @@
         .import-status.loading { background: rgba(240, 185, 11, 0.2); color: var(--gold); display: block; }
         .import-status.success { background: rgba(11, 138, 78, 0.2); color: #0b8a4e; display: block; }
         .import-status.error { background: rgba(246, 70, 93, 0.2); color: #f6465d; display: block; }
-        
+
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } }
 
         /* New stats styles */
@@ -256,7 +256,7 @@
             </div>
             <button class="lang-toggle" id="langToggleBtn" onclick="toggleLanguage()">中文</button>
         </div>
-        
+
         <div id="page-session" class="page active">
             <div class="input-section">
                 <div class="input-row">
@@ -271,7 +271,7 @@
                 </div>
                 <button class="btn-add" onclick="addPlayer()" data-i18n="addPlayer">➕ Add Player</button>
             </div>
-            
+
             <div class="table-header">
                 <div data-i18n="colName">Name</div>
                 <div style="text-align:center" data-i18n="colBuyIn">Buy-in</div>
@@ -279,10 +279,10 @@
                 <div style="text-align:right">P&amp;L</div>
                 <div></div>
             </div>
-            
+
             <div id="playersList"></div>
             <div id="netStatus"></div>
-            
+
             <div class="save-section">
                 <div class="confirm-check">
                     <input type="checkbox" id="confirmSave">
@@ -291,20 +291,20 @@
                 <button class="btn-save" id="saveBtn" onclick="saveSession()" disabled data-i18n="saveSession">💾 Save Session</button>
             </div>
         </div>
-        
+
         <div id="page-history" class="page">
             <div id="historyList"></div>
         </div>
-        
+
         <div id="page-stats" class="page">
             <div id="statsContent"></div>
         </div>
-        
+
         <div id="page-login" class="page">
             <div id="loginContent"></div>
         </div>
     </div>
-    
+
     <!-- Session Edit Modal -->
     <div id="sessionModal" class="modal">
         <div class="modal-content">
@@ -330,7 +330,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Player Detail Modal -->
     <div id="playerModal" class="modal">
         <div class="modal-content">
@@ -351,14 +351,14 @@
             <div id="playerSessionsList" style="max-height: 400px; overflow-y: auto;"></div>
         </div>
     </div>
-    
+
     <nav class="nav">
         <button class="nav-item active" onclick="showPage('session')" data-i18n="navSession">🃏 Session</button>
         <button class="nav-item" onclick="showPage('history')" data-i18n="navHistory">📜 History</button>
         <button class="nav-item" onclick="showPage('stats')" data-i18n="navStats">📊 Stats</button>
         <button class="nav-item" onclick="showPage('login')" data-i18n="navLogin">👤 Login</button>
     </nav>
-    
+
     <script>
         // ══════════════════════════════════════════════════════════════════════
         // LANGUAGE SYSTEM
@@ -523,7 +523,7 @@
                 colName: "姓名",
                 colBuyIn: "买入",
                 colStack: "筹码",
-                confirmSaveLabel: "我确认保存（将清空当前输入）",
+                confirmSaveLabel: "我确认保存(将清空当前输入)",
                 saveSession: "💾 保存本局",
 
                 // Net status
@@ -577,8 +577,8 @@
                 biggestSingleLoss: "💀 单场最大亏损",
                 accumulatedWinnings: "📈 累计盈亏",
                 monthlyPnlTrends: "📅 月度盈亏趋势",
-                playerPerformance: "🏆 玩家表现（点击查看）",
-                minSessions: "最少局数：",
+                playerPerformance: "🏆 玩家表现(点击查看)",
+                minSessions: "最少局数:",
                 allFilter: "全部",
                 playerCol: "玩家",
                 sessionsCol: "局数",
@@ -592,7 +592,7 @@
                 sharedSessions: "场共同对局",
                 ties: "平局",
                 wins: "胜",
-                noDataYet: "暂无数据，快去打牌吧！",
+                noDataYet: "暂无数据,快去打牌吧!",
                 loginToViewStats: "请登录以查看统计数据",
                 noPlayersWithSessions: "没有达到3局以上的玩家",
                 fiveSessionsNeeded: "需要5局以上",
@@ -609,8 +609,8 @@
                 avgBuyIn: "平均买入",
                 currentStreak: "当前连续",
                 sessionSizeImpact: "📊 桌型影响",
-                smallTable: "小桌（≤6人）",
-                largeTable: "大桌（>6人）",
+                smallTable: "小桌(≤6人)",
+                largeTable: "大桌(>6人)",
                 dateCol: "日期",
                 buyInCol: "买入",
                 stackCol: "筹码",
@@ -619,11 +619,11 @@
                 // Login page
                 joinOrCreate: "加入或创建扑克社区",
                 yourName: "您的姓名",
-                communityNamePlaceholder: "社区名称（新建社区时填写）",
-                communityCodePlaceholder: "社区代码（6位字符）",
+                communityNamePlaceholder: "社区名称(新建社区时填写)",
+                communityCodePlaceholder: "社区代码(6位字符)",
                 joinCommunity: "🚀 加入社区",
-                noCode: "没有代码？",
-                createWithCode: "输入任意6位字符即可创建新社区！",
+                noCode: "没有代码?",
+                createWithCode: "输入任意6位字符即可创建新社区!",
                 importFromScreenshot: "📸 截图导入",
                 inProgress: "🛠️ 开发中 - 敬请期待",
                 analyzeImport: "🔍 分析并导入",
@@ -631,28 +631,28 @@
                 communityCode: "社区代码",
                 sessionsSynced: "局已同步",
                 leaveCommunity: "🚪 退出社区",
-                shareCode: "💡 将此代码分享给朋友：",
-                theyCanJoin: "他们输入此代码和姓名即可加入！",
+                shareCode: "💡 将此代码分享给朋友:",
+                theyCanJoin: "他们输入此代码和姓名即可加入!",
                 manualEntry: "手动输入",
                 importData: "导入数据",
 
                 // Alerts
                 alertEnterName: "请输入玩家姓名",
-                alertCannotSave: "无法保存：牌桌不平衡！",
-                alertSessionSaved: "本局已保存！",
+                alertCannotSave: "无法保存:牌桌不平衡!",
+                alertSessionSaved: "本局已保存!",
                 alertOnlyOwnerEdit: "只有社区管理员才能编辑记录",
-                alertCannotSaveBalance: "无法保存：牌桌必须平衡！当前净值：",
-                alertChangesSaved: "修改已保存！",
+                alertCannotSaveBalance: "无法保存:牌桌必须平衡!当前净值:",
+                alertChangesSaved: "修改已保存!",
                 alertOnlyOwnerDelete: "只有社区管理员才能删除记录",
-                alertConfirmDelete: "确定要删除这局记录吗？",
+                alertConfirmDelete: "确定要删除这局记录吗?",
                 alertUploadFirst: "请先上传截图",
                 alertEnterDate: "请输入日期",
                 alertEnterPlayerData: "请输入玩家数据",
                 alertNoValidData: "未找到有效的玩家数据",
-                alertImportSuccess: "成功导入本局，共",
-                alertImportSuccessPlayers: "位玩家！",
-                analyzingScreenshot: "🔄 正在分析截图...（此功能需要后端AI支持，请暂时使用手动输入。）",
-                aiAnalysisError: "⚠️ AI分析需要后端配置。<br><br>请在下方手动输入局数据：",
+                alertImportSuccess: "成功导入本局,共",
+                alertImportSuccessPlayers: "位玩家!",
+                analyzingScreenshot: "🔄 正在分析截图...(此功能需要后端AI支持,请暂时使用手动输入。)",
+                aiAnalysisError: "⚠️ AI分析需要后端配置。<br><br>请在下方手动输入局数据:",
             }
         };
 
@@ -698,31 +698,72 @@
         let players = [];
         let sessions = JSON.parse(localStorage.getItem('pokerSessions') || '[]');
         let editingSessionId = null;
-        
+
+        // Live session auto-save (survives page refresh)
+        const LIVE_SESSION_KEY = 'pokerLiveSession';
+        const LIVE_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+        function saveLiveSession() {
+            if (players.length === 0) return;
+            localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify({
+                players,
+                editingSessionId,
+                savedAt: Date.now()
+            }));
+        }
+
+        function restoreLiveSession() {
+            try {
+                const raw = localStorage.getItem(LIVE_SESSION_KEY);
+                if (!raw) return;
+                const session = JSON.parse(raw);
+                if (!session.players || !Array.isArray(session.players)) return;
+                if (Date.now() - session.savedAt > LIVE_SESSION_TTL_MS) {
+                    localStorage.removeItem(LIVE_SESSION_KEY);
+                    return;
+                }
+                players = session.players;
+                editingSessionId = session.editingSessionId || null;
+                renderPlayers();
+                if (editingSessionId) {
+                    const confirmCheck = document.getElementById('confirmSave');
+                    if (confirmCheck) confirmCheck.checked = true;
+                    const saveBtn = document.getElementById('saveBtn');
+                    if (saveBtn) saveBtn.disabled = false;
+                }
+            } catch (e) {
+                console.warn('Failed to restore live session:', e);
+            }
+        }
+
+        function clearLiveSession() {
+            localStorage.removeItem(LIVE_SESSION_KEY);
+        }
+
         // Community management with Supabase
         let supabaseClient = null;
         let currentUser = null;
         let currentCommunity = null;
-        
+
         // Supabase config - replace with your credentials
         const SUPABASE_URL = 'https://nqejbumjkezgvnynxlol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xZWpidW1qa2V6Z3ZueW54bG9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MDg1MDYsImV4cCI6MjA2MDk4NDUwNn0.Iy3PH6HNIlHFpMp-4Tz8UMHHpMp-4Tz8UMHHpMp-4Tz8';
-        
+
         async function initSupabase() {
             try {
                 const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
                 supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-                
+
                 // Try to restore session from localStorage
                 const savedCommunity = localStorage.getItem('pokerCommunity');
                 const savedUser = localStorage.getItem('pokerUser');
-                
+
                 if (savedCommunity && savedUser) {
                     currentCommunity = JSON.parse(savedCommunity);
                     currentUser = JSON.parse(savedUser);
                     await loadSessionsFromCloud();
                 }
-                
+
                 renderCommunitySelector();
                 renderLoginPage();
                 renderHistory();
@@ -731,23 +772,23 @@
                 console.error('Supabase init error:', err);
             }
         }
-        
+
         async function loginWithCommunity() {
             const nameInput = document.getElementById('loginName');
             const codeInput = document.getElementById('loginCode');
             const communityNameInput = document.getElementById('newCommunityNameInput');
-            
+
             const name = nameInput?.value?.trim();
             const code = codeInput?.value?.trim()?.toUpperCase();
             const communityName = communityNameInput?.value?.trim();
-            
+
             if (!name || !code || code.length !== 6) {
                 alert(currentLang === 'zh' ? '请输入您的姓名和6位社区代码' : 'Please enter your name and a 6-character community code');
                 return;
             }
-            
+
             localStorage.setItem('pokerUserName', name);
-            
+
             try {
                 // Check if community exists
                 let { data: community, error } = await supabaseClient
@@ -755,7 +796,7 @@
                     .select('*')
                     .eq('code', code)
                     .single();
-                
+
                 if (error || !community) {
                     // Create new community
                     const newName = communityName || (name + "'s Community");
@@ -764,42 +805,42 @@
                         .insert({ name: newName, code: code, owner_name: name })
                         .select()
                         .single();
-                    
+
                     if (createError) throw createError;
                     community = newCommunity;
                     currentUser = { name, role: 'owner' };
                 } else {
                     currentUser = { name, role: 'member' };
                 }
-                
+
                 currentCommunity = community;
                 localStorage.setItem('pokerCommunity', JSON.stringify(currentCommunity));
                 localStorage.setItem('pokerUser', JSON.stringify(currentUser));
-                
+
                 await loadSessionsFromCloud();
                 renderCommunitySelector();
                 renderLoginPage();
                 renderHistory();
                 renderStats();
-                
+
             } catch (err) {
                 console.error('Login error:', err);
-                alert(currentLang === 'zh' ? '连接失败，请重试' : 'Connection failed. Please try again.');
+                alert(currentLang === 'zh' ? '连接失败,请重试' : 'Connection failed. Please try again.');
             }
         }
-        
+
         async function loadSessionsFromCloud() {
             if (!currentCommunity) return;
-            
+
             try {
                 const { data, error } = await supabaseClient
                     .from('sessions')
                     .select('*')
                     .eq('community_id', currentCommunity.id)
                     .order('date', { ascending: false });
-                
+
                 if (error) throw error;
-                
+
                 sessions = data || [];
                 // Normalize field names
                 sessions = sessions.map(s => ({
@@ -812,7 +853,7 @@
                 console.error('Load sessions error:', err);
             }
         }
-        
+
         async function saveSessionToCloud(sessionData) {
             if (!currentCommunity) {
                 const communitySessions = getCommunitySessions();
@@ -825,7 +866,7 @@
                 saveCommunitySessions(communitySessions);
                 return;
             }
-            
+
             try {
                 if (sessionData.id && typeof sessionData.id === 'string' && sessionData.id.includes('-')) {
                     const { error } = await supabaseClient
@@ -838,15 +879,15 @@
                             net: sessionData.net
                         })
                         .eq('id', sessionData.id);
-                    
+
                     if (error) throw error;
-                    
+
                     const idx = sessions.findIndex(s => s.id === sessionData.id);
                     if (idx >= 0) sessions[idx] = sessionData;
                     saveToLocalStorage();
                     return;
                 }
-                
+
                 const { data, error } = await supabaseClient
                     .from('sessions')
                     .insert({
@@ -859,12 +900,12 @@
                     })
                     .select()
                     .single();
-                
+
                 if (error) throw error;
-                
+
                 sessions.unshift(data);
                 saveToLocalStorage();
-                
+
             } catch (err) {
                 console.error('Save session error:', err);
                 const communitySessions = getCommunitySessions();
@@ -872,31 +913,31 @@
                 saveCommunitySessions(communitySessions);
             }
         }
-        
+
         async function deleteSessionFromCloud(sessionId) {
             if (!currentCommunity) {
                 const communitySessions = getCommunitySessions().filter(s => s.id !== sessionId);
                 saveCommunitySessions(communitySessions);
                 return;
             }
-            
+
             try {
                 await supabaseClient
                     .from('sessions')
                     .delete()
                     .eq('id', sessionId);
-                
+
                 sessions = sessions.filter(s => s.id !== sessionId);
                 saveToLocalStorage();
             } catch (err) {
                 console.error('Delete error:', err);
             }
         }
-        
+
         function saveToLocalStorage() {
             localStorage.setItem('pokerSessions', JSON.stringify(sessions));
         }
-        
+
         function logout() {
             currentUser = null;
             currentCommunity = null;
@@ -909,37 +950,38 @@
             renderHistory();
             renderStats();
         }
-        
+
         initSupabase();
-        
+        restoreLiveSession();
+
         function getCommunitySessions() {
             return sessions;
         }
-        
+
         function saveCommunitySessions(s) {
             sessions = s;
             saveToLocalStorage();
         }
-        
+
         function renderCommunitySelector() {
             const nameEl = document.getElementById('communityName');
             if (!nameEl) return;
-            
+
             if (currentCommunity) {
                 nameEl.textContent = '☁️ ' + currentCommunity.name;
             } else {
                 nameEl.textContent = t('notConnected');
             }
         }
-        
+
         const buyInInput = document.getElementById('buyInAmount');
         const newPlayerInput = document.getElementById('newPlayerName');
         const playersList = document.getElementById('playersList');
         const confirmCheck = document.getElementById('confirmSave');
         const saveBtn = document.getElementById('saveBtn');
-        
+
         confirmCheck.addEventListener('change', () => { saveBtn.disabled = !confirmCheck.checked || players.length === 0; });
-        
+
         function addPlayer() {
             const name = newPlayerInput.value.trim();
             const buyIn = parseFloat(buyInInput.value) || 1000;
@@ -948,14 +990,16 @@
             newPlayerInput.value = '';
             renderPlayers();
             saveBtn.disabled = !confirmCheck.checked || players.length === 0;
+            saveLiveSession();
         }
-        
+
         function removePlayer(index) {
             players.splice(index, 1);
             renderPlayers();
             saveBtn.disabled = !confirmCheck.checked || players.length === 0;
+            saveLiveSession();
         }
-        
+
         function changeHands(index, delta) {
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
             players[index].hands += delta;
@@ -963,27 +1007,30 @@
             players[index].buyIn = players[index].hands * baseBuyIn;
             players[index].stack = players[index].buyIn;
             renderPlayers();
+            saveLiveSession();
         }
-        
+
         function updateStack(index, value) {
             players[index].stack = parseFloat(value) || 0;
             renderPlayers();
+            saveLiveSession();
         }
-        
+
         function updateAllStacks() {
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
             players.forEach(p => { p.buyIn = p.hands * baseBuyIn; p.stack = p.buyIn; });
             renderPlayers();
+            saveLiveSession();
         }
-        
-        function updateName(index, value) { players[index].name = value; renderPlayers(); }
-        
+
+        function updateName(index, value) { players[index].name = value; renderPlayers(); saveLiveSession(); }
+
         function calculateTotals() {
             let totalUp = 0, totalDown = 0;
             players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += pnl; });
             return { totalUp, totalDown, net: totalUp + totalDown };
         }
-        
+
         function renderPlayers() {
             const { totalUp, totalDown, net } = calculateTotals();
             if (players.length === 0) {
@@ -994,14 +1041,14 @@
                     const pnl = p.stack - p.buyIn;
                     const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                     const pnlPrefix = pnl >= 0 ? '+' : '';
-                    html += `<div class="player-row"><div><input type="text" class="name-input" value="${p.name}" onchange="updateName(${i}, this.value)"></div><div class="hands-control"><button class="btn-hands" onclick="changeHands(${i}, -1)">−</button><span class="hands-num">${p.hands}</span><button class="btn-hands" onclick="changeHands(${i}, 1)">+</button></div><div><input type="number" class="stack-input" value="${p.stack}" onchange="updateStack(${i}, this.value)"></div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl).toLocaleString()}</div><button class="btn-delete" onclick="removePlayer(${i})">🗑️</button></div>`;
+                    html += `<div class="player-row"><div><input type="text" class="name-input" value="${p.name}" onchange="updateName(${i}, this.value)"></div><div class="hands-control"><button class="btn-hands" onclick="changeHands(${i}, -1)">-</button><span class="hands-num">${p.hands}</span><button class="btn-hands" onclick="changeHands(${i}, 1)">+</button></div><div><input type="number" class="stack-input" value="${p.stack}" onchange="updateStack(${i}, this.value)"></div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl).toLocaleString()}</div><button class="btn-delete" onclick="removePlayer(${i})">🗑️</button></div>`;
                 });
                 playersList.innerHTML = html;
             }
             renderNetStatus(net);
             renderTotals(totalUp, totalDown);
         }
-        
+
         function renderNetStatus(net) {
             const netDiv = document.getElementById('netStatus');
             if (players.length === 0) { netDiv.innerHTML = ''; return; }
@@ -1009,43 +1056,45 @@
             else if (net > 0) netDiv.innerHTML = `<div class="net-status win">${t('tableWinning')} ${Math.round(net).toLocaleString()}</div>`;
             else netDiv.innerHTML = `<div class="net-status loss">${t('tableLosing')} ${Math.round(Math.abs(net)).toLocaleString()}</div>`;
         }
-        
+
         function renderTotals(totalUp, totalDown) {
             let totalsDiv = document.getElementById('totals');
             if (!totalsDiv) { totalsDiv = document.createElement('div'); totalsDiv.id = 'totals'; totalsDiv.className = 'totals'; document.body.appendChild(totalsDiv); }
             totalsDiv.innerHTML = `<div class="total-item"><div class="label">${t('totalUp')}</div><div class="value">${Math.round(totalUp).toLocaleString()}</div></div><div class="total-item"><div class="label">${t('totalDown')}</div><div class="value">${Math.round(totalDown).toLocaleString()}</div></div><div class="total-item"><div class="label">${t('net')}</div><div class="value">${Math.round(totalUp + totalDown).toLocaleString()}</div></div>`;
         }
-        
+
         function saveSession() {
             const { net } = calculateTotals();
             if (Math.abs(net) >= 1) { alert(t('alertCannotSave')); return; }
-            
-            const sessionData = { 
-                id: Date.now(), 
-                date: new Date().toISOString().split('T')[0], 
-                players: JSON.parse(JSON.stringify(players)), 
-                totalUp: calculateTotals().totalUp, 
-                totalDown: calculateTotals().totalDown, 
+
+            const sessionData = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                players: JSON.parse(JSON.stringify(players)),
+                totalUp: calculateTotals().totalUp,
+                totalDown: calculateTotals().totalDown,
                 net: net,
                 communityId: currentCommunity?.id || 'local'
             };
-            
+
             saveSessionToCloud(sessionData);
-            
+
             players = []; confirmCheck.checked = false; saveBtn.disabled = true;
+            editingSessionId = null;
+            clearLiveSession();
             renderPlayers(); renderHistory(); renderStats(); alert(t('alertSessionSaved'));
         }
-        
+
         function renderHistory() {
             const historyList = document.getElementById('historyList');
-            
-            if (!currentCommunity) { 
-                historyList.innerHTML = `<div class="empty">${t('loginToViewHistory')}</div>`; 
-                return; 
+
+            if (!currentCommunity) {
+                historyList.innerHTML = `<div class="empty">${t('loginToViewHistory')}</div>`;
+                return;
             }
-            
+
             const communitySessions = getCommunitySessions();
-            
+
             if (communitySessions.length === 0) { historyList.innerHTML = `<div class="empty">${t('noHistory')}</div>`; return; }
             let html = '';
             communitySessions.forEach((session, idx) => {
@@ -1055,25 +1104,26 @@
             });
             historyList.innerHTML = html;
         }
-        
+
         function openEditModal(sessionId, viewOnly = false) {
             if (!viewOnly && currentUser && currentUser.role && currentUser.role !== 'owner') {
                 alert(t('alertOnlyOwnerEdit'));
                 return;
             }
-            
+
             editingSessionId = sessionId;
+            clearLiveSession();
             const session = sessions.find(s => s.id === sessionId);
             if (!session) return;
             document.getElementById('editDate').value = session.date;
             renderEditPlayers(session.players);
             document.getElementById('sessionModal').classList.add('active');
         }
-        
+
         function renderEditPlayers(playersArr) {
             let html = '';
             let totalUp = 0, totalDown = 0;
-            
+
             playersArr.forEach((p, i) => {
                 const pnl = p.stack - p.buyIn;
                 if (pnl >= 0) totalUp += pnl;
@@ -1082,23 +1132,23 @@
                 const pnlPrefix = pnl >= 0 ? '+' : '';
                 html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><input type="number" value="${p.buyIn || 0}" id="editBuyIn_${i}"><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
             });
-            
+
             const net = totalUp - totalDown;
             const netClass = Math.abs(net) < 1 ? 'even' : (net >= 0 ? 'positive' : 'negative');
             const netText = Math.abs(net) < 1 ? '✅ EVEN' : (net >= 0 ? `+${Math.round(net)}` : Math.round(net));
             html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>${t('totalRow')}</div><div>${Math.round(totalUp + totalDown).toLocaleString()}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
-            
+
             html += `<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">${t('addPlayerBtn')}</button>`;
             document.getElementById('editPlayersList').innerHTML = html;
         }
-        
+
         function removeEditPlayer(index) {
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
             session.players.splice(index, 1);
             renderEditPlayers(session.players);
         }
-        
+
         function addEditPlayer() {
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
@@ -1107,57 +1157,60 @@
             session.players.push({ name: newPlayerName, hands: 1, buyIn: baseBuyIn, stack: baseBuyIn });
             renderEditPlayers(session.players);
         }
-        
+
         function saveSessionChanges() {
             const session = sessions.find(s => s.id === editingSessionId);
             if (!session) return;
-            
-            session.players.forEach((p, i) => { 
-                p.name = document.getElementById('editName_' + i).value; 
+
+            session.players.forEach((p, i) => {
+                p.name = document.getElementById('editName_' + i).value;
                 p.buyIn = parseFloat(document.getElementById('editBuyIn_' + i).value) || 0;
                 p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0;
             });
-            
+
             let totalUp = 0, totalDown = 0;
             session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += Math.abs(pnl); });
             const net = totalUp - totalDown;
-            
+
             if (Math.abs(net) >= 1) {
                 alert(t('alertCannotSaveBalance') + net);
                 return;
             }
-            
+
             session.date = document.getElementById('editDate').value;
             session.totalUp = totalUp; session.totalDown = -totalDown; session.net = net;
-            
+
             saveSessionToCloud(session);
-            
+
             saveToLocalStorage();
-            closeModal('sessionModal'); renderHistory(); renderStats(); alert(t('alertChangesSaved'));
+            closeModal('sessionModal');
+            editingSessionId = null;
+            clearLiveSession();
+            renderHistory(); renderStats(); alert(t('alertChangesSaved'));
         }
-        
+
         function deleteCurrentSession() {
             if (!currentUser || currentUser.role !== 'owner') {
                 alert(t('alertOnlyOwnerDelete'));
                 return;
             }
-            
+
             if (!confirm(t('alertConfirmDelete'))) return;
             const sessionId = editingSessionId;
-            
+
             deleteSessionFromCloud(sessionId);
-            
+
             sessions = sessions.filter(s => s.id !== sessionId);
             localStorage.setItem('pokerSessions', JSON.stringify(sessions));
-            
+
             closeModal('sessionModal'); renderHistory(); renderStats();
         }
-        
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
             if (modalId === 'sessionModal') editingSessionId = null;
         }
-        
+
         function renderStats() {
             const statsDiv = document.getElementById('statsContent');
 
@@ -1340,7 +1393,7 @@
             sortedPlayers.forEach(([name, stats]) => {
                 const winRate = stats.sessions > 0 ? Math.round((stats.wins / stats.sessions) * 100) : 0;
                 const pnlClass = stats.net >= 0 ? 'pnl-positive' : 'pnl-negative';
-                let streakHtml = '<span class="streak-neutral">—</span>';
+                let streakHtml = '<span class="streak-neutral">-</span>';
                 if (stats.currentStreakType === 'W' && stats.currentStreak > 0) {
                     streakHtml = `<span class="streak-hot">🔥 ${stats.currentStreak}W</span>`;
                 } else if (stats.currentStreakType === 'L' && stats.currentStreak > 0) {
@@ -1492,19 +1545,19 @@
                 <div class="h2h-meta">${sharedSessions} ${t('sharedSessions')}${tiesStr}</div>
             `;
         }
-        
+
         function renderPnLChart() {
             const container = document.getElementById('pnlChart');
             if (!container) return;
-            
+
             const playerFilterEl = document.getElementById('playerFilter');
             const selectedPlayer = playerFilterEl?.value || null;
-            
+
             const communitySessions = getCommunitySessions();
             const sortedSessions = [...communitySessions].sort((a, b) => new Date(a.date) - new Date(b.date));
             let cumulative = 0;
             const chartData = [];
-            
+
             sortedSessions.forEach(session => {
                 let sessionPnl = 0;
                 if (!selectedPlayer) {
@@ -1516,39 +1569,39 @@
                 cumulative += sessionPnl;
                 chartData.push({ date: session.date, pnl: sessionPnl, cumulative });
             });
-            
+
             if (chartData.length === 0) { container.innerHTML = `<div class="empty">${currentLang === 'zh' ? '暂无数据' : 'No data'}</div>`; return; }
-            
+
             const width = container.clientWidth || 350;
             const height = 200;
             const padding = { top: 20, right: 20, bottom: 40, left: 60 };
-            
+
             const minCum = Math.min(...chartData.map(d => d.cumulative), 0);
             const maxCum = Math.max(...chartData.map(d => d.cumulative), 0);
             const range = (maxCum - minCum) || 1;
             const yMin = minCum - range * 0.1;
             const yMax = maxCum + range * 0.1;
             const yRange = yMax - yMin;
-            
+
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
-            
+
             const getX = (i) => padding.left + (i / (chartData.length - 1 || 1)) * chartWidth;
             const getY = (val) => padding.top + chartHeight - ((val - yMin) / yRange) * chartHeight;
-            
+
             let pathD = '';
             chartData.forEach((d, i) => {
                 const x = getX(i);
                 const y = getY(d.cumulative);
                 pathD += (i === 0 ? 'M' : 'L') + x + ',' + y;
             });
-            
+
             const isPositive = chartData[chartData.length - 1]?.cumulative >= 0;
             const lineColor = isPositive ? '#f6465d' : '#0b8a4e';
             const fillColor = isPositive ? 'rgba(246, 70, 93, 0.15)' : 'rgba(11, 138, 78, 0.15)';
-            
+
             let areaD = pathD + ` L${getX(chartData.length - 1)},${getY(0)} L${getX(0)},${getY(0)} Z`;
-            
+
             let gridLines = '';
             const numGridLines = 5;
             for (let i = 0; i <= numGridLines; i++) {
@@ -1557,23 +1610,23 @@
                 gridLines += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#2a2e39" stroke-dasharray="3"/>`;
                 gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" fill="#848e9c" font-size="10">${val >= 0 ? '+' : ''}${Math.round(val/1000)}k</text>`;
             }
-            
+
             let xLabels = '';
             chartData.forEach((d, i) => {
                 if (chartData.length <= 5 || i === 0 || i === chartData.length - 1 || i === Math.floor(chartData.length / 2)) {
                     xLabels += `<text x="${getX(i)}" y="${height - 10}" text-anchor="middle" fill="#848e9c" font-size="10">${d.date.slice(0, 7)}</text>`;
                 }
             });
-            
+
             let hoverElements = '';
             chartData.forEach((d, i) => {
                 const x = getX(i);
                 const y = getY(d.cumulative);
-                hoverElements += `<circle class="chart-dot" cx="${x}" cy="${y}" r="6" fill="${lineColor}" opacity="0" 
-                    onmouseover="showTooltip(event, '${d.date}', ${d.cumulative})" 
+                hoverElements += `<circle class="chart-dot" cx="${x}" cy="${y}" r="6" fill="${lineColor}" opacity="0"
+                    onmouseover="showTooltip(event, '${d.date}', ${d.cumulative})"
                     onmouseout="hideTooltip()"/>`;
             });
-            
+
             container.innerHTML = `
                 <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:100%;">
                     ${gridLines}
@@ -1590,26 +1643,26 @@
                 </div>
             `;
         }
-        
+
         function showTooltip(event, date, value) {
             const tooltip = document.getElementById('chartTooltip');
             const tooltipDate = document.getElementById('tooltipDate');
             const tooltipValue = document.getElementById('tooltipValue');
-            
+
             tooltipDate.textContent = date;
             tooltipValue.textContent = (value >= 0 ? '+' : '') + value.toLocaleString();
             tooltipValue.style.color = value >= 0 ? '#f6465d' : '#0b8a4e';
-            
+
             tooltip.style.display = 'block';
             tooltip.style.left = (event.offsetX + 10) + 'px';
             tooltip.style.top = (event.offsetY - 40) + 'px';
         }
-        
+
         function hideTooltip() {
             const tooltip = document.getElementById('chartTooltip');
             if (tooltip) tooltip.style.display = 'none';
         }
-        
+
         function showPlayerDetail(playerName) {
             document.getElementById('playerModalTitle').textContent = playerName;
 
@@ -1685,7 +1738,7 @@
                 <div class="mini-stat"><div class="label">${t('roiPct')}</div><div class="value ${roi >= 0 ? 'positive' : 'negative'}">${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</div></div>
                 <div class="mini-stat"><div class="label">${t('avgPnlSession')}</div><div class="value ${avgPnl >= 0 ? 'positive' : 'negative'}">${avgPnl >= 0 ? '+' : ''}${Math.round(avgPnl).toLocaleString()}</div></div>
                 <div class="mini-stat"><div class="label">${t('avgBuyIn')}</div><div class="value">${Math.round(avgBuyIn).toLocaleString()}</div></div>
-                <div class="mini-stat"><div class="label">${t('currentStreak')}</div><div class="value">${streakIndicator || '<span style="color:var(--text-dim)">—</span>'}</div></div>
+                <div class="mini-stat"><div class="label">${t('currentStreak')}</div><div class="value">${streakIndicator || '<span style="color:var(--text-dim)">-</span>'}</div></div>
             </div>
             ${sizeImpactHtml}`;
 
@@ -1699,7 +1752,7 @@
             document.getElementById('playerSessionsList').innerHTML = statsHtml + (html || `<div class="empty">${t('noSessions')}</div>`);
             document.getElementById('playerModal').classList.add('active');
         }
-        
+
         function showPage(pageName) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1709,16 +1762,16 @@
             if (pageName === 'stats') renderStats();
             if (pageName === 'login') renderLoginPage();
         }
-        
+
         renderPlayers(); renderHistory();
         newPlayerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addPlayer(); });
-        
+
         renderCommunitySelector();
         renderLoginPage();
-        
+
         function renderLoginPage() {
             const loginDiv = document.getElementById('loginContent');
-            
+
             if (!currentCommunity) {
                 loginDiv.innerHTML = `
                     <div class="login-container">
@@ -1726,19 +1779,19 @@
                             <h2>🃏 PokerGuys</h2>
                             <p>${t('joinOrCreate')}</p>
                         </div>
-                        
+
                         <div class="login-form">
                             <input type="text" id="loginName" placeholder="${t('yourName')}" value="${localStorage.getItem('pokerUserName') || ''}">
                             <input type="text" id="newCommunityNameInput" placeholder="${t('communityNamePlaceholder')}">
                             <input type="text" id="loginCode" placeholder="${t('communityCodePlaceholder')}" maxlength="6" style="text-transform: uppercase;">
                             <button class="btn-login" onclick="loginWithCommunity()">${t('joinCommunity')}</button>
                         </div>
-                        
+
                         <div style="text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 20px;">
                             <p>${t('noCode')}</p>
                             <p>${t('createWithCode')}</p>
                         </div>
-                        
+
                         <div class="import-section">
                             <h3>${t('importFromScreenshot')}</h3>
                             <span class="developing-badge">${t('inProgress')}</span>
@@ -1756,22 +1809,22 @@
                             <h2>👤 ${currentUser?.name || 'Player'}</h2>
                             <p>${t('connectedToCloud')}</p>
                         </div>
-                        
+
                         <div class="community-info">
                             <div style="font-size: 12px; color: var(--text-dim);">${t('communityCode')}</div>
                             <div class="code">${currentCommunity.code}</div>
                             <div style="font-size: 14px; font-weight: bold; color: var(--gold);">${currentCommunity.name}</div>
                             <div class="members">${sessions.length} ${t('sessionsSynced')}</div>
                         </div>
-                        
+
                         <button class="btn-community secondary" onclick="logout()" style="width: 100%;">${t('leaveCommunity')}</button>
-                        
+
                         <div style="margin-top: 30px; padding: 15px; background: var(--card); border-radius: 8px; font-size: 12px; color: var(--text-dim);">
                             <strong>${t('shareCode')}</strong><br>
                             <span style="font-size: 24px; color: var(--gold); font-weight: bold;">${currentCommunity.code}</span><br>
                             ${t('theyCanJoin')}
                         </div>
-                        
+
                         <div class="import-section">
                             <h3>${t('importFromScreenshot')}</h3>
                             <span class="developing-badge">${t('inProgress')}</span>
@@ -1784,19 +1837,19 @@
                 `;
             }
         }
-        
+
         function doCreateCommunity() {
             const name = document.getElementById('newCommunityName').value;
             createCommunity(name);
         }
-        
+
         let uploadedImageBase64 = null;
-        
+
         function handleScreenshotUpload() {
             const input = document.getElementById('screenshotInput');
             const preview = document.getElementById('importPreview');
             const file = input.files[0];
-            
+
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -1807,57 +1860,57 @@
                 reader.readAsDataURL(file);
             }
         }
-        
+
         function analyzeScreenshot() {
             const status = document.getElementById('importStatus');
             const btn = document.getElementById('analyzeBtn');
-            
+
             if (!uploadedImageBase64) {
                 alert(t('alertUploadFirst'));
                 return;
             }
-            
+
             status.className = 'import-status loading';
             status.textContent = t('analyzingScreenshot');
             btn.disabled = true;
-            
+
             setTimeout(() => {
                 status.className = 'import-status error';
                 status.innerHTML = t('aiAnalysisError');
-                
+
                 showManualEntryForm();
-                
+
                 btn.disabled = false;
             }, 2000);
         }
-        
+
         function showManualEntryForm() {
             const status = document.getElementById('importStatus');
             const existingForm = document.getElementById('manualEntryForm');
             if (existingForm) existingForm.remove();
-            
+
             const formHtml = `
                 <div id="manualEntryForm" style="margin-top: 15px; padding: 15px; background: var(--bg); border-radius: 8px;">
                     <h4 style="color: var(--gold); margin-bottom: 10px;">${t('manualEntry')}</h4>
                     <input type="date" id="sessionDate" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); margin-bottom: 10px;">
-                    <textarea id="manualPlayersData" style="width: 100%; height: 100px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 13px; margin-bottom: 10px;" placeholder="${currentLang === 'zh' ? '格式：姓名,买入,筹码（每行一位玩家）\n例如：张三,1000,1500' : 'Format: Name,BuyIn,Stack (one player per line)\nExample: Alice,1000,1500'}"></textarea>
+                    <textarea id="manualPlayersData" style="width: 100%; height: 100px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; font-size: 13px; margin-bottom: 10px;" placeholder="${currentLang === 'zh' ? '格式:姓名,买入,筹码(每行一位玩家)\n例如:张三,1000,1500' : 'Format: Name,BuyIn,Stack (one player per line)\nExample: Alice,1000,1500'}"></textarea>
                     <button class="btn-community" onclick="importManualData()">${t('importData')}</button>
                 </div>
             `;
             status.insertAdjacentHTML('beforeend', formHtml);
         }
-        
+
         function importManualData() {
             const date = document.getElementById('sessionDate').value;
             const dataText = document.getElementById('manualPlayersData').value;
-            
+
             if (!date) { alert(t('alertEnterDate')); return; }
             if (!dataText.trim()) { alert(t('alertEnterPlayerData')); return; }
-            
+
             try {
                 const importedPlayers = [];
                 const lines = dataText.split('\n');
-                
+
                 lines.forEach(line => {
                     const parts = line.split(',').map(s => s.trim());
                     if (parts.length >= 3) {
@@ -1869,16 +1922,16 @@
                         }
                     }
                 });
-                
+
                 if (importedPlayers.length === 0) { alert(t('alertNoValidData')); return; }
-                
+
                 let totalUp = 0, totalDown = 0;
                 importedPlayers.forEach(p => {
                     const pnl = p.stack - p.buyIn;
                     if (pnl >= 0) totalUp += pnl;
                     else totalDown += pnl;
                 });
-                
+
                 const communitySessions = getCommunitySessions();
                 const session = {
                     id: Date.now(),
@@ -1889,21 +1942,21 @@
                     net: totalUp + totalDown,
                     communityId: currentCommunity?.id || 'local'
                 };
-                
+
                 communitySessions.unshift(session);
                 saveCommunitySessions(communitySessions);
-                
+
                 const statusEl = document.getElementById('importStatus');
                 statusEl.className = 'import-status success';
                 statusEl.textContent = `✅ ${t('alertImportSuccess')} ${importedPlayers.length} ${t('alertImportSuccessPlayers')}`;
-                
+
                 document.getElementById('screenshotInput').value = '';
                 document.getElementById('importPreview').style.display = 'none';
                 uploadedImageBase64 = null;
-                
+
                 renderHistory();
                 renderStats();
-                
+
             } catch (e) {
                 alert('Error: ' + e.message);
             }
@@ -1912,7 +1965,7 @@
         // Apply translations on load
         applyTranslations();
     </script>
-    
+
     <div class="footer">
         © 2026 PokerGuys. All rights reserved.
     </div>
