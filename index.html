@@ -296,7 +296,13 @@
                 <div class="input-row">
                     <div class="input-group">
                         <label data-i18n="buyInAmount">Buy-in Amount</label>
-                        <input type="number" id="buyInAmount" value="1000" step="100" onchange="updateAllStacks()">
+                        <div class="amount-unit-input">
+                            <input type="number" id="buyInAmount" value="400" step="100" onchange="updateAllStacks()">
+                            <select id="sessionEntryUnit" aria-label="Session entry unit" onchange="updateSessionEntryUnit(this.value)">
+                                <option value="hkd">HKD</option>
+                                <option value="chips" data-i18n="chips">Chips</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="input-group">
                         <label data-i18n="newPlayer">New Player</label>
@@ -333,6 +339,14 @@
                 <span class="eyebrow" data-i18n="theLedger">The ledger</span>
                 <h2 data-i18n="sessionHistory">Session history</h2>
                 <p data-i18n="historyHint">Review every game and open a session to see the full table.</p>
+                <div class="unit-toolbar">
+                    <span class="unit-toolbar-label" data-i18n="displayUnit">Display amounts in</span>
+                    <div class="unit-switcher" role="group" aria-label="Display unit">
+                        <button type="button" data-display-unit="hkd" onclick="setDisplayUnit('hkd')">HKD</button>
+                        <button type="button" data-display-unit="chips" onclick="setDisplayUnit('chips')" data-i18n="chips">Chips</button>
+                    </div>
+                    <span class="unit-rate" data-i18n="conversionRate">5 chips = HK$1</span>
+                </div>
             </div>
             <div id="historyList"></div>
         </div>
@@ -342,6 +356,14 @@
                 <span class="eyebrow" data-i18n="groupForm">Group form</span>
                 <h2 data-i18n="statsTitle">The long game.</h2>
                 <p data-i18n="statsHint">See who's running hot, who is due a comeback, and how results move over time.</p>
+                <div class="unit-toolbar">
+                    <span class="unit-toolbar-label" data-i18n="displayUnit">Display amounts in</span>
+                    <div class="unit-switcher" role="group" aria-label="Display unit">
+                        <button type="button" data-display-unit="hkd" onclick="setDisplayUnit('hkd')">HKD</button>
+                        <button type="button" data-display-unit="chips" onclick="setDisplayUnit('chips')" data-i18n="chips">Chips</button>
+                    </div>
+                    <span class="unit-rate" data-i18n="conversionRate">5 chips = HK$1</span>
+                </div>
             </div>
             <div id="statsContent"></div>
         </div>
@@ -364,6 +386,7 @@
                 <label data-i18n="date">Date</label>
                 <input type="date" id="editDate">
             </div>
+            <div id="editUnitNote" class="edit-unit-note"></div>
             <div class="table-header" style="border-radius: 8px 8px 0 0;">
                 <div data-i18n="colName">Name</div>
                 <div style="text-align:center" data-i18n="colBuyIn">Buy-in</div>
@@ -467,6 +490,10 @@
                 theLedger: "The ledger",
                 sessionHistory: "Session history",
                 historyHint: "Review every game and open a session to see the full table.",
+                displayUnit: "Display amounts in",
+                chips: "Chips",
+                conversionRate: "5 chips = HK$1",
+                nativeUnit: "Recorded in",
 
                 // Edit modal
                 editSession: "Edit Session",
@@ -631,6 +658,10 @@
                 theLedger: "牌局账本",
                 sessionHistory: "历史牌局",
                 historyHint: "回顾每场牌局，点开记录即可查看完整牌桌。",
+                displayUnit: "显示单位",
+                chips: "筹码",
+                conversionRate: "5 筹码 = HK$1",
+                nativeUnit: "原始记录单位",
 
                 // Edit modal
                 editSession: "编辑本局",
@@ -785,6 +816,7 @@
             if (document.getElementById('page-login').classList.contains('active')) renderLoginPage();
             renderCommunitySelector();
             updateSessionDateDisplay();
+            updateUnitSwitchers();
         }
 
         function toggleLanguage() {
@@ -802,6 +834,80 @@
         let editingSessionDraft = null;
         let isSessionReadOnly = false;
         let deferredInstallPrompt = null;
+        const DEFAULT_CHIPS_PER_HKD = 5;
+        let displayUnit = localStorage.getItem('pokerDisplayUnit') === 'chips' ? 'chips' : 'hkd';
+        let sessionEntryUnit = localStorage.getItem('pokerSessionEntryUnit') === 'chips' ? 'chips' : 'hkd';
+
+        function convertUnitAmount(amount, sourceUnit, targetUnit, rate = DEFAULT_CHIPS_PER_HKD) {
+            const value = Number(amount) || 0;
+            if (sourceUnit === targetUnit) return value;
+            return sourceUnit === 'chips' ? value / rate : value * rate;
+        }
+
+        function getSessionValueUnit(session) {
+            const playerWithUnit = session?.players?.find(player => player.valueUnit);
+            return session?.valueUnit || playerWithUnit?.valueUnit || 'chips';
+        }
+
+        function getSessionChipsPerHkd(session) {
+            const playerWithRate = session?.players?.find(player => Number(player.chipsPerHkd) > 0);
+            return Number(session?.chipsPerHkd || playerWithRate?.chipsPerHkd) || DEFAULT_CHIPS_PER_HKD;
+        }
+
+        function convertSessionAmount(session, amount, targetUnit = displayUnit) {
+            const sourceUnit = getSessionValueUnit(session);
+            const rate = getSessionChipsPerHkd(session);
+            return convertUnitAmount(amount, sourceUnit, targetUnit, rate);
+        }
+
+        function convertDisplayAmountToSession(session, amount) {
+            const value = Number(amount) || 0;
+            const sourceUnit = getSessionValueUnit(session);
+            const rate = getSessionChipsPerHkd(session);
+            return convertUnitAmount(value, displayUnit, sourceUnit, rate);
+        }
+
+        function formatCurrentAmount(amount, signed = false) {
+            const rounded = Math.round((Number(amount) || 0) * 100) / 100;
+            const sign = rounded < 0 ? '-' : (signed && rounded > 0 ? '+' : '');
+            const formatted = new Intl.NumberFormat(currentLang === 'zh' ? 'zh-HK' : 'en-HK', {
+                maximumFractionDigits: 2
+            }).format(Math.abs(rounded));
+            return `${sign}${displayUnit === 'hkd' ? 'HK$' : ''}${formatted}`;
+        }
+
+        function formatCompactAmount(amount) {
+            const value = Number(amount) || 0;
+            const absolute = Math.abs(value);
+            if (absolute < 1000) return formatCurrentAmount(value, true);
+            const compact = `${(absolute / 1000).toFixed(absolute >= 10000 ? 0 : 1).replace(/\.0$/, '')}k`;
+            const sign = value < 0 ? '-' : '+';
+            return `${sign}${displayUnit === 'hkd' ? 'HK$' : ''}${compact}`;
+        }
+
+        function setDisplayUnit(unit) {
+            displayUnit = unit === 'chips' ? 'chips' : 'hkd';
+            localStorage.setItem('pokerDisplayUnit', displayUnit);
+            updateUnitSwitchers();
+            renderHistory();
+            if (document.getElementById('page-stats').classList.contains('active')) renderStats();
+            if (editingSessionDraft && document.getElementById('sessionModal').classList.contains('active')) {
+                renderEditPlayers(editingSessionDraft.players);
+            }
+        }
+
+        function updateUnitSwitchers() {
+            document.querySelectorAll('[data-display-unit]').forEach(button => {
+                const isActive = button.dataset.displayUnit === displayUnit;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+            const editUnitNote = document.getElementById('editUnitNote');
+            if (editUnitNote && editingSessionDraft) {
+                const nativeUnit = getSessionValueUnit(editingSessionDraft) === 'hkd' ? 'HKD' : t('chips');
+                editUnitNote.textContent = `${t('nativeUnit')}: ${nativeUnit} · ${t('conversionRate')}`;
+            }
+        }
 
         function getLocalISODate(date = new Date()) {
             const year = date.getFullYear();
@@ -861,6 +967,7 @@
                 players,
                 editingSessionId,
                 baseBuyIn: parseFloat(document.getElementById('buyInAmount')?.value) || 1000,
+                entryUnit: sessionEntryUnit,
                 savedAt: Date.now()
             }));
         }
@@ -875,7 +982,14 @@
                     localStorage.removeItem(LIVE_SESSION_KEY);
                     return;
                 }
-                players = session.players;
+                sessionEntryUnit = session.entryUnit || session.players.find(player => player.valueUnit)?.valueUnit || 'chips';
+                localStorage.setItem('pokerSessionEntryUnit', sessionEntryUnit);
+                sessionEntryUnitInput.value = sessionEntryUnit;
+                players = session.players.map(player => ({
+                    ...player,
+                    valueUnit: player.valueUnit || sessionEntryUnit,
+                    chipsPerHkd: Number(player.chipsPerHkd) || DEFAULT_CHIPS_PER_HKD
+                }));
                 editingSessionId = session.editingSessionId || null;
                 if (session.baseBuyIn) buyInInput.value = session.baseBuyIn;
                 renderPlayers();
@@ -1132,10 +1246,31 @@
         }
 
         const buyInInput = document.getElementById('buyInAmount');
+        const sessionEntryUnitInput = document.getElementById('sessionEntryUnit');
         const newPlayerInput = document.getElementById('newPlayerName');
         const playersList = document.getElementById('playersList');
         const confirmCheck = document.getElementById('confirmSave');
         const saveBtn = document.getElementById('saveBtn');
+
+        sessionEntryUnitInput.value = sessionEntryUnit;
+        buyInInput.value = sessionEntryUnit === 'hkd' ? 400 : 2000;
+
+        function updateSessionEntryUnit(nextUnit) {
+            const normalizedUnit = nextUnit === 'chips' ? 'chips' : 'hkd';
+            if (normalizedUnit === sessionEntryUnit) return;
+            const previousUnit = sessionEntryUnit;
+            sessionEntryUnit = normalizedUnit;
+            localStorage.setItem('pokerSessionEntryUnit', sessionEntryUnit);
+            buyInInput.value = convertUnitAmount(buyInInput.value, previousUnit, sessionEntryUnit);
+            players.forEach(player => {
+                player.buyIn = convertUnitAmount(player.buyIn, previousUnit, sessionEntryUnit);
+                player.stack = convertUnitAmount(player.stack, previousUnit, sessionEntryUnit);
+                player.valueUnit = sessionEntryUnit;
+                player.chipsPerHkd = DEFAULT_CHIPS_PER_HKD;
+            });
+            renderPlayers();
+            saveLiveSession();
+        }
 
         function updateSaveState() {
             const { net } = calculateTotals();
@@ -1148,7 +1283,14 @@
             const name = newPlayerInput.value.trim();
             const buyIn = parseFloat(buyInInput.value) || 1000;
             if (!name) { alert(t('alertEnterName')); return; }
-            players.push({ name, hands: 1, buyIn, stack: buyIn });
+            players.push({
+                name,
+                hands: 1,
+                buyIn,
+                stack: buyIn,
+                valueUnit: sessionEntryUnit,
+                chipsPerHkd: DEFAULT_CHIPS_PER_HKD
+            });
             hapticImpact();
             newPlayerInput.value = '';
             renderPlayers();
@@ -1170,6 +1312,8 @@
             players[index].hands += delta;
             if (players[index].hands < 1) players[index].hands = 1;
             players[index].buyIn = players[index].hands * baseBuyIn;
+            players[index].valueUnit = sessionEntryUnit;
+            players[index].chipsPerHkd = DEFAULT_CHIPS_PER_HKD;
             if (stackWasUntouched) players[index].stack = players[index].buyIn;
             renderPlayers();
             saveLiveSession();
@@ -1186,6 +1330,8 @@
             players.forEach(p => {
                 const stackWasUntouched = p.stack === p.buyIn;
                 p.buyIn = p.hands * baseBuyIn;
+                p.valueUnit = sessionEntryUnit;
+                p.chipsPerHkd = DEFAULT_CHIPS_PER_HKD;
                 if (stackWasUntouched) p.stack = p.buyIn;
             });
             renderPlayers();
@@ -1251,7 +1397,9 @@
                 totalUp: calculateTotals().totalUp,
                 totalDown: calculateTotals().totalDown,
                 net: net,
-                communityId: currentCommunity?.id || 'local'
+                communityId: currentCommunity?.id || 'local',
+                valueUnit: sessionEntryUnit,
+                chipsPerHkd: DEFAULT_CHIPS_PER_HKD
             };
 
             saveBtn.disabled = true;
@@ -1273,8 +1421,11 @@
             let html = '';
             communitySessions.forEach((session, idx) => {
                 let biggestWinner = { name: '', pnl: -Infinity };
-                session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl }; });
-                const winnerAmount = Number.isFinite(biggestWinner.pnl) ? ` · +${Math.round(biggestWinner.pnl).toLocaleString()}` : '';
+                session.players.forEach(p => {
+                    const pnl = convertSessionAmount(session, p.stack - p.buyIn);
+                    if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl };
+                });
+                const winnerAmount = Number.isFinite(biggestWinner.pnl) ? ` · ${formatCurrentAmount(biggestWinner.pnl, true)}` : '';
                 html += `<button class="history-item" type="button" data-id="${session.id}" onclick="openEditModal('${session.id}', true)"><div class="history-header"><div><div class="history-date">${escapeHtml(session.date)}</div><div class="history-location">${session.players.length} ${t('players')}</div></div><div class="history-winner"><div class="label">${t('biggestWinner')}</div><div class="name">${escapeHtml(biggestWinner.name || '-')}${winnerAmount}</div></div></div></button>`;
             });
             historyList.innerHTML = html;
@@ -1298,6 +1449,7 @@
             document.querySelector('.btn-save-changes').style.display = isSessionReadOnly ? 'none' : '';
             document.querySelector('.btn-delete-session').style.display = isSessionReadOnly ? 'none' : '';
             renderEditPlayers(editingSessionDraft.players);
+            updateUnitSwitchers();
             document.getElementById('sessionModal').classList.add('active');
         }
 
@@ -1306,19 +1458,20 @@
             let totalUp = 0, totalDown = 0;
 
             playersArr.forEach((p, i) => {
-                const pnl = p.stack - p.buyIn;
+                const displayBuyIn = convertSessionAmount(editingSessionDraft, p.buyIn);
+                const displayStack = convertSessionAmount(editingSessionDraft, p.stack);
+                const pnl = displayStack - displayBuyIn;
                 if (pnl >= 0) totalUp += pnl;
                 else totalDown += Math.abs(pnl);
                 const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-                const pnlPrefix = pnl >= 0 ? '+' : '';
                 const readOnlyAttr = isSessionReadOnly ? 'disabled' : '';
-                html += `<div class="player-edit-row"><input type="text" value="${escapeHtml(p.name)}" id="editName_${i}" ${readOnlyAttr}><input type="number" value="${p.buyIn || 0}" id="editBuyIn_${i}" ${readOnlyAttr}><input type="number" value="${p.stack}" id="editStack_${i}" ${readOnlyAttr}><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div>${isSessionReadOnly ? '<div></div>' : `<button class="btn-delete" type="button" aria-label="Remove player" onclick="removeEditPlayer(${i})">Remove</button>`}</div>`;
+                html += `<div class="player-edit-row"><input type="text" value="${escapeHtml(p.name)}" id="editName_${i}" ${readOnlyAttr}><input type="number" step="any" value="${displayBuyIn}" id="editBuyIn_${i}" ${readOnlyAttr}><input type="number" step="any" value="${displayStack}" id="editStack_${i}" ${readOnlyAttr}><div class="pnl ${pnlClass}">${formatCurrentAmount(pnl, true)}</div>${isSessionReadOnly ? '<div></div>' : `<button class="btn-delete" type="button" aria-label="Remove player" onclick="removeEditPlayer(${i})">Remove</button>`}</div>`;
             });
 
             const net = totalUp - totalDown;
             const netClass = Math.abs(net) < 1 ? 'even' : (net >= 0 ? 'positive' : 'negative');
-            const netText = Math.abs(net) < 1 ? '✅ EVEN' : (net >= 0 ? `+${Math.round(net)}` : Math.round(net));
-            html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>${t('totalRow')}</div><div>${Math.round(totalUp + totalDown).toLocaleString()}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
+            const netText = Math.abs(net) < 0.01 ? '✅ EVEN' : formatCurrentAmount(net, true);
+            html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>${t('totalRow')}</div><div>${formatCurrentAmount(totalUp + totalDown)}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
 
             if (!isSessionReadOnly) html += `<button class="btn-add" type="button" style="margin-top:10px;" onclick="addEditPlayer()">${t('addPlayerBtn')}</button>`;
             document.getElementById('editPlayersList').innerHTML = html;
@@ -1336,9 +1489,17 @@
             if (isSessionReadOnly) return;
             const session = editingSessionDraft;
             if (!session) return;
-            const baseBuyIn = parseFloat(buyInInput.value) || 1000;
+            const firstPlayer = session.players[0];
+            const baseBuyIn = firstPlayer ? firstPlayer.buyIn / (firstPlayer.hands || 1) : (getSessionValueUnit(session) === 'hkd' ? 400 : 2000);
             const newPlayerName = currentLang === 'zh' ? '新玩家' : 'New Player';
-            session.players.push({ name: newPlayerName, hands: 1, buyIn: baseBuyIn, stack: baseBuyIn });
+            session.players.push({
+                name: newPlayerName,
+                hands: 1,
+                buyIn: baseBuyIn,
+                stack: baseBuyIn,
+                valueUnit: getSessionValueUnit(session),
+                chipsPerHkd: getSessionChipsPerHkd(session)
+            });
             renderEditPlayers(session.players);
         }
 
@@ -1352,8 +1513,8 @@
 
             session.players.forEach((p, i) => {
                 p.name = document.getElementById('editName_' + i).value;
-                p.buyIn = parseFloat(document.getElementById('editBuyIn_' + i).value) || 0;
-                p.stack = parseFloat(document.getElementById('editStack_' + i).value) || 0;
+                p.buyIn = convertDisplayAmountToSession(session, parseFloat(document.getElementById('editBuyIn_' + i).value) || 0);
+                p.stack = convertDisplayAmountToSession(session, parseFloat(document.getElementById('editStack_' + i).value) || 0);
             });
 
             let totalUp = 0, totalDown = 0;
@@ -1429,7 +1590,9 @@
             communitySessions.forEach(session => {
                 const sessionPlayerCount = session.players.length;
                 session.players.forEach(p => {
-                    const pnl = p.stack - p.buyIn;
+                    const buyIn = convertSessionAmount(session, p.buyIn);
+                    const finalStack = convertSessionAmount(session, p.stack);
+                    const pnl = finalStack - buyIn;
                     if (pnl > highestSessionWin) { highestSessionWin = pnl; highestSessionWinName = p.name; }
                     if (pnl < highestSessionLoss) { highestSessionLoss = pnl; highestSessionLossName = p.name; }
                     if (!playerStats[p.name]) playerStats[p.name] = {
@@ -1443,8 +1606,8 @@
                         sessionPnls: []
                     };
                     const ps = playerStats[p.name];
-                    ps.buyIn += p.buyIn;
-                    ps.final += p.stack;
+                    ps.buyIn += buyIn;
+                    ps.final += finalStack;
                     ps.sessions += 1;
                     ps.net += pnl;
                     ps.sessionPnls.push(pnl);
@@ -1463,7 +1626,7 @@
                 sortedChron.forEach(session => {
                     const player = session.players.find(p => p.name === playerName);
                     if (player) {
-                        const pnl = player.stack - player.buyIn;
+                        const pnl = convertSessionAmount(session, player.stack - player.buyIn);
                         if (pnl > 0) {
                             curW++; if (curW > maxW) maxW = curW; curL = 0;
                             lastStreakType = 'W'; lastStreakCount = curW;
@@ -1516,7 +1679,9 @@
             });
 
             let highestBuyIn = 0;
-            communitySessions.forEach(s => s.players.forEach(p => { if (p.buyIn > highestBuyIn) highestBuyIn = p.buyIn; }));
+            communitySessions.forEach(session => session.players.forEach(player => {
+                highestBuyIn = Math.max(highestBuyIn, convertSessionAmount(session, player.buyIn));
+            }));
 
             let highestWinRatePlayer = { name: '', rate: 0 };
             Object.entries(playerStats).forEach(([name, stats]) => {
@@ -1532,20 +1697,20 @@
             let html = `<div class="stats-summary">
                 <div class="stat-card"><div class="label">${t('totalSessions')}</div><div class="value">${totalSessions}</div></div>
                 <div class="stat-card"><div class="label">${t('totalPlayers')}</div><div class="value">${Object.keys(playerStats).length}</div></div>
-                <div class="stat-card"><div class="label">${t('highestBuyIn')}</div><div class="value">${highestBuyIn.toLocaleString()}</div></div>
+                <div class="stat-card"><div class="label">${t('highestBuyIn')}</div><div class="value">${formatCurrentAmount(highestBuyIn)}</div></div>
                 <div class="stat-card"><div class="label">${t('highestWinRate')}</div><div class="value">${highestWinRatePlayer.name ? highestWinRatePlayer.name + ' (' + highestWinRatePlayer.rate + '%)' : '-'}</div></div>
                 <div class="stat-card"><div class="label">${t('bestWinStreak')}</div><div class="value">${longestWinStreak.name ? longestWinStreak.name + ' (' + longestWinStreak.count + ')' : '-'}</div></div>
                 <div class="stat-card"><div class="label">${t('worstLossStreak')}</div><div class="value negative">${longestLossStreak.name ? longestLossStreak.name + ' (' + longestLossStreak.count + ')' : '-'}</div></div>
-                <div class="stat-card full"><div class="label">${t('highestAccumWinner')}</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${highestWinner.net >= 0 ? '+' : ''}${Math.round(highestWinner.net).toLocaleString()})</div></div>
+                <div class="stat-card full"><div class="label">${t('highestAccumWinner')}</div><div class="value ${highestWinner.net >= 0 ? 'positive' : 'negative'}">${highestWinner.name || '-'} (${formatCurrentAmount(highestWinner.net, true)})</div></div>
             </div>`;
 
             html += `<div class="stats-summary">
                 <div class="stat-card"><div class="label">${t('bestROI')}</div><div class="value positive">${bestROI.name ? bestROI.name : '-'}</div><div class="sub">${bestROI.name ? (bestROI.roi >= 0 ? '+' : '') + bestROI.roi.toFixed(1) + '%' : ''}</div></div>
-                <div class="stat-card"><div class="label">${t('bestAvgPnl')}</div><div class="value positive">${bestAvgPnl.name ? bestAvgPnl.name : '-'}</div><div class="sub">${bestAvgPnl.name ? (bestAvgPnl.avg >= 0 ? '+' : '') + Math.round(bestAvgPnl.avg).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('bestAvgPnl')}</div><div class="value positive">${bestAvgPnl.name ? bestAvgPnl.name : '-'}</div><div class="sub">${bestAvgPnl.name ? formatCurrentAmount(bestAvgPnl.avg, true) : ''}</div></div>
                 <div class="stat-card"><div class="label">${t('sharkIndex')}</div><div class="value gold">${topShark.name ? topShark.name : '-'}</div><div class="sub">${topShark.name ? topShark.score.toFixed(1) + '/100' : t('fiveSessionsNeeded')}</div></div>
                 <div class="stat-card"><div class="label">${t('comebackKing')}</div><div class="value gold">${comebackKing.name ? comebackKing.name : '-'}</div><div class="sub">${comebackKing.name ? comebackKing.count + t('xMultiBuyinWins') : '-'}</div></div>
-                <div class="stat-card"><div class="label">${t('biggestSingleWin')}</div><div class="value positive">${highestSessionWinName || '-'}</div><div class="sub">${highestSessionWin > 0 ? '+' + Math.round(highestSessionWin).toLocaleString() : ''}</div></div>
-                <div class="stat-card"><div class="label">${t('biggestSingleLoss')}</div><div class="value negative">${highestSessionLossName || '-'}</div><div class="sub">${highestSessionLoss < 0 ? Math.round(highestSessionLoss).toLocaleString() : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('biggestSingleWin')}</div><div class="value positive">${highestSessionWinName || '-'}</div><div class="sub">${highestSessionWin > 0 ? formatCurrentAmount(highestSessionWin, true) : ''}</div></div>
+                <div class="stat-card"><div class="label">${t('biggestSingleLoss')}</div><div class="value negative">${highestSessionLossName || '-'}</div><div class="sub">${highestSessionLoss < 0 ? formatCurrentAmount(highestSessionLoss) : ''}</div></div>
             </div>`;
 
             const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= 3).sort();
@@ -1602,7 +1767,7 @@
                     <div>${escapeHtml(name)}</div>
                     <div>${stats.sessions}</div>
                     <div class="${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div>
-                    <div class="${pnlClass}">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net).toLocaleString()}</div>
+                    <div class="${pnlClass}">${formatCurrentAmount(stats.net, true)}</div>
                     <div>${streakHtml}</div>
                 </div>`;
             });
@@ -1649,7 +1814,7 @@
                 const player = session.players.find(p => p.name === selectedPlayer);
                 if (player) {
                     if (!monthlyData[month]) monthlyData[month] = 0;
-                    monthlyData[month] += (player.stack - player.buyIn);
+                    monthlyData[month] += convertSessionAmount(session, player.stack - player.buyIn);
                 }
             });
 
@@ -1665,7 +1830,7 @@
                 const val = values[i];
                 const barH = Math.max(2, Math.round((Math.abs(val) / maxAbs) * maxBarHeight));
                 const cls = val >= 0 ? 'positive' : 'negative';
-                const valStr = val >= 0 ? '+' + Math.round(val / 1000) + 'k' : Math.round(val / 1000) + 'k';
+                const valStr = formatCompactAmount(val);
                 const label = month.slice(5);
                 const yearLabel = month.slice(2, 4);
                 barsHtml += `<div class="monthly-bar">
@@ -1701,8 +1866,8 @@
                 const player2 = session.players.find(p => p.name === p2);
                 if (player1 && player2) {
                     sharedSessions++;
-                    const pnl1 = player1.stack - player1.buyIn;
-                    const pnl2 = player2.stack - player2.buyIn;
+                    const pnl1 = convertSessionAmount(session, player1.stack - player1.buyIn);
+                    const pnl2 = convertSessionAmount(session, player2.stack - player2.buyIn);
                     p1TotalPnl += pnl1;
                     p2TotalPnl += pnl2;
                     if (pnl1 > pnl2) p1Wins++;
@@ -1718,8 +1883,8 @@
 
             const p1WinClass = p1Wins > p2Wins ? 'winner' : 'loser';
             const p2WinClass = p2Wins > p1Wins ? 'winner' : 'loser';
-            const p1PnlStr = (p1TotalPnl >= 0 ? '+' : '') + Math.round(p1TotalPnl).toLocaleString();
-            const p2PnlStr = (p2TotalPnl >= 0 ? '+' : '') + Math.round(p2TotalPnl).toLocaleString();
+            const p1PnlStr = formatCurrentAmount(p1TotalPnl, true);
+            const p2PnlStr = formatCurrentAmount(p2TotalPnl, true);
             const tiesStr = ties > 0 ? ' · ' + ties + ' ' + t('ties') : '';
 
             resultEl.innerHTML = `
@@ -1757,10 +1922,10 @@
             sortedSessions.forEach(session => {
                 let sessionPnl = 0;
                 if (!selectedPlayer) {
-                    session.players.forEach(p => { sessionPnl += (p.stack - p.buyIn); });
+                    session.players.forEach(p => { sessionPnl += convertSessionAmount(session, p.stack - p.buyIn); });
                 } else {
                     const player = session.players.find(p => p.name === selectedPlayer);
-                    if (player) sessionPnl = player.stack - player.buyIn;
+                    if (player) sessionPnl = convertSessionAmount(session, player.stack - player.buyIn);
                 }
                 cumulative += sessionPnl;
                 chartData.push({ date: session.date, pnl: sessionPnl, cumulative });
@@ -1804,7 +1969,7 @@
                 const y = padding.top + (i / numGridLines) * chartHeight;
                 const val = yMax - (i / numGridLines) * yRange;
                 gridLines += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#2a2e39" stroke-dasharray="3"/>`;
-                gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" fill="#848e9c" font-size="10">${val >= 0 ? '+' : ''}${Math.round(val/1000)}k</text>`;
+                gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" fill="#848e9c" font-size="10">${formatCompactAmount(val)}</text>`;
             }
 
             let xLabels = '';
@@ -1846,7 +2011,7 @@
             const tooltipValue = document.getElementById('tooltipValue');
 
             tooltipDate.textContent = date;
-            tooltipValue.textContent = (value >= 0 ? '+' : '') + value.toLocaleString();
+            tooltipValue.textContent = formatCurrentAmount(value, true);
             tooltipValue.style.color = value >= 0 ? '#f6465d' : '#0b8a4e';
 
             tooltip.style.display = 'block';
@@ -1871,13 +2036,15 @@
             communitySessions.forEach(session => {
                 const player = session.players.find(p => p.name === playerName);
                 if (player) {
-                    const pnl = player.stack - player.buyIn;
+                    const buyIn = convertSessionAmount(session, player.buyIn);
+                    const finalStack = convertSessionAmount(session, player.stack);
+                    const pnl = finalStack - buyIn;
                     if (pnl > 0) wins++;
                     else if (pnl < 0) losses++;
-                    totalBuyIn += player.buyIn;
+                    totalBuyIn += buyIn;
                     if (session.players.length <= 6) { smallPnl += pnl; smallCount++; }
                     else { largePnl += pnl; largeCount++; }
-                    playerSessions.push({ date: session.date, pnl, buyIn: player.buyIn, final: player.stack, hands: player.hands || 1 });
+                    playerSessions.push({ date: session.date, pnl, buyIn, final: finalStack, hands: player.hands || 1 });
                 }
             });
 
@@ -1907,7 +2074,7 @@
             });
 
             document.getElementById('playerTotalSessions').textContent = totalSessions;
-            document.getElementById('playerTotalNet').textContent = (totalNet >= 0 ? '+' : '') + Math.round(totalNet).toLocaleString();
+            document.getElementById('playerTotalNet').textContent = formatCurrentAmount(totalNet, true);
             document.getElementById('playerTotalNet').className = 'value ' + (totalNet >= 0 ? 'positive' : 'negative');
 
             let streakIndicator = '';
@@ -1920,8 +2087,8 @@
                 <div style="margin:10px 0;padding:10px;background:var(--bg);border-radius:8px;">
                     <div style="font-size:12px;color:var(--gold);font-weight:bold;margin-bottom:8px;">${t('sessionSizeImpact')}</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <div class="mini-stat"><div class="label">${t('smallTable')}</div><div class="value ${smallAvg !== null ? (smallAvg >= 0 ? 'positive' : 'negative') : ''}">${smallAvg !== null ? (smallAvg >= 0 ? '+' : '') + smallAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${smallCount} ${t('sessionsCol')}</div></div>
-                        <div class="mini-stat"><div class="label">${t('largeTable')}</div><div class="value ${largeAvg !== null ? (largeAvg >= 0 ? 'positive' : 'negative') : ''}">${largeAvg !== null ? (largeAvg >= 0 ? '+' : '') + largeAvg.toLocaleString() : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${largeCount} ${t('sessionsCol')}</div></div>
+                        <div class="mini-stat"><div class="label">${t('smallTable')}</div><div class="value ${smallAvg !== null ? (smallAvg >= 0 ? 'positive' : 'negative') : ''}">${smallAvg !== null ? formatCurrentAmount(smallAvg, true) : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${smallCount} ${t('sessionsCol')}</div></div>
+                        <div class="mini-stat"><div class="label">${t('largeTable')}</div><div class="value ${largeAvg !== null ? (largeAvg >= 0 ? 'positive' : 'negative') : ''}">${largeAvg !== null ? formatCurrentAmount(largeAvg, true) : 'N/A'}</div><div style="font-size:10px;color:var(--text-dim);">${largeCount} ${t('sessionsCol')}</div></div>
                     </div>
                 </div>`;
 
@@ -1932,8 +2099,8 @@
                 <div class="mini-stat"><div class="label">${t('bestStreak')}</div><div class="value">${maxWinStreak}</div></div>
                 <div class="mini-stat"><div class="label">${t('worstStreak')}</div><div class="value negative">${maxLossStreak}</div></div>
                 <div class="mini-stat"><div class="label">${t('roiPct')}</div><div class="value ${roi >= 0 ? 'positive' : 'negative'}">${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%</div></div>
-                <div class="mini-stat"><div class="label">${t('avgPnlSession')}</div><div class="value ${avgPnl >= 0 ? 'positive' : 'negative'}">${avgPnl >= 0 ? '+' : ''}${Math.round(avgPnl).toLocaleString()}</div></div>
-                <div class="mini-stat"><div class="label">${t('avgBuyIn')}</div><div class="value">${Math.round(avgBuyIn).toLocaleString()}</div></div>
+                <div class="mini-stat"><div class="label">${t('avgPnlSession')}</div><div class="value ${avgPnl >= 0 ? 'positive' : 'negative'}">${formatCurrentAmount(avgPnl, true)}</div></div>
+                <div class="mini-stat"><div class="label">${t('avgBuyIn')}</div><div class="value">${formatCurrentAmount(avgBuyIn)}</div></div>
                 <div class="mini-stat"><div class="label">${t('currentStreak')}</div><div class="value">${streakIndicator || '<span style="color:var(--text-dim)">-</span>'}</div></div>
             </div>
             ${sizeImpactHtml}`;
@@ -1941,8 +2108,7 @@
             let html = `<div class="player-detail-header" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;"><div>${t('dateCol')}</div><div>${t('buyInCol')}</div><div>${t('stackCol')}</div><div>P&L</div></div>`;
             playerSessions.forEach(s => {
                 const pnlClass = s.pnl >= 0 ? 'positive' : 'negative';
-                const pnlPrefix = s.pnl >= 0 ? '+' : '';
-                html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>${Math.round(s.buyIn).toLocaleString()}</div><div>${Math.round(s.final).toLocaleString()}</div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(s.pnl).toLocaleString()}</div></div>`;
+                html += `<div class="player-detail-row"><div class="date">${s.date}</div><div>${formatCurrentAmount(s.buyIn)}</div><div>${formatCurrentAmount(s.final)}</div><div class="pnl ${pnlClass}">${formatCurrentAmount(s.pnl, true)}</div></div>`;
             });
 
             document.getElementById('playerSessionsList').innerHTML = statsHtml + (html || `<div class="empty">${t('noSessions')}</div>`);
@@ -2172,7 +2338,14 @@
                         const buyIn = parseFloat(parts[1]) || 0;
                         const stack = parseFloat(parts[2]) || 0;
                         if (name && (buyIn > 0 || stack > 0)) {
-                            importedPlayers.push({ name, buyIn, stack, hands: 1 });
+                            importedPlayers.push({
+                                name,
+                                buyIn,
+                                stack,
+                                hands: 1,
+                                valueUnit: sessionEntryUnit,
+                                chipsPerHkd: DEFAULT_CHIPS_PER_HKD
+                            });
                         }
                     }
                 });
@@ -2194,7 +2367,9 @@
                     totalUp,
                     totalDown,
                     net: totalUp + totalDown,
-                    communityId: currentCommunity?.id || 'local'
+                    communityId: currentCommunity?.id || 'local',
+                    valueUnit: sessionEntryUnit,
+                    chipsPerHkd: DEFAULT_CHIPS_PER_HKD
                 };
 
                 communitySessions.unshift(session);

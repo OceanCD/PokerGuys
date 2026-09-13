@@ -6,11 +6,13 @@ PokerGuys is a bilingual poker session ledger for a private group of friends. It
 
 - **Live session:** add players, track multiple buy-ins, enter final stacks, and validate the table balance.
 - **Reliable on mobile:** an in-progress table is restored after a refresh for up to 24 hours.
-- **History:** review and edit completed sessions.
-- **Stats:** cumulative and monthly P&L, player records, streaks, ROI, table-size impact, and head-to-head results.
+- **History:** review and edit completed sessions, with amounts viewable in chips or HKD.
+- **Stats:** cumulative and monthly P&L, player records, streaks, ROI, table-size impact, and head-to-head results in either unit.
 - **Groups:** join a shared Supabase community using a six-character code.
 - **Bilingual:** English and Traditional Chinese UI.
 - **iPhone-ready:** installable PWA plus a Capacitor configuration for a native iOS build.
+
+PokerGuys uses the group conversion rate **5 chips = HK$1**. Historical sessions without unit metadata are treated as chip-denominated; newer HKD-denominated sessions carry their unit and conversion rate inside the session player data.
 
 The production web app is deployed at [poker-guys.vercel.app](https://poker-guys.vercel.app).
 
