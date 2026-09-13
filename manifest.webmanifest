@@ -1,0 +1,27 @@
+{
+  "name": "PokerGuys — Poker Ledger",
+  "short_name": "PokerGuys",
+  "description": "Track poker sessions, settle the table, and follow your group's profit and loss.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080b0d",
+  "theme_color": "#080b0d",
+  "categories": ["finance", "utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "/assets/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

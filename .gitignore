@@ -25,3 +25,7 @@ Thumbs.db
 
 # Streamlit
 .streamlit/
+
+# Web / native build output
+node_modules/
+dist/

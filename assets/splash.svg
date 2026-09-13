@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2732 2732">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="48%">
+      <stop stop-color="#1D2927"/>
+      <stop offset="1" stop-color="#080B0D"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="1080" y1="870" x2="1650" y2="1650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE59A"/>
+      <stop offset="1" stop-color="#E8B93E"/>
+    </linearGradient>
+  </defs>
+  <rect width="2732" height="2732" fill="url(#glow)"/>
+  <circle cx="1366" cy="1230" r="300" fill="#11171A" stroke="#F4C95D" stroke-opacity=".2" stroke-width="6"/>
+  <path d="M1366 952c-45 74-157 147-157 256 0 72 55 123 125 109-10 41-29 74-61 99h187c-32-25-51-58-61-99 70 14 125-37 125-109 0-109-113-182-158-256Z" fill="url(#gold)"/>
+  <circle cx="1366" cy="1188" r="52" fill="#11171A"/>
+  <path d="M1366 1155c-10 19-37 36-37 61 0 17 13 29 30 25-2 10-7 18-14 23h43c-7-5-12-13-14-23 17 4 30-8 30-25 0-25-27-42-38-61Z" fill="#FF7262"/>
+  <text x="1366" y="1640" text-anchor="middle" fill="#F6F3EB" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="160" font-weight="700" letter-spacing="-6">Poker<tspan fill="#F4C95D">Guys</tspan></text>
+  <text x="1366" y="1745" text-anchor="middle" fill="#7E8B87" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="44" font-weight="600" letter-spacing="9">THE FRIENDLY POKER LEDGER</text>
+</svg>

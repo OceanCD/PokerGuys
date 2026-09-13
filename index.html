@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PokerGuys - Texas Hold'em Session Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Track poker sessions, settle the table, and follow your group's profit and loss.">
+    <meta name="theme-color" content="#080b0d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PokerGuys">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./assets/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <title>PokerGuys — Poker Ledger</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 
@@ -245,20 +253,46 @@
         .pnl-positive { color: var(--profit); font-weight: bold; }
         .pnl-negative { color: var(--loss); font-weight: bold; }
     </style>
+    <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
+<body data-page="session">
+    <div class="app-shell">
     <div class="container">
         <div class="header">
-            <h1>🃏 PokerGuys</h1>
-            <p data-i18n="subtitle">Texas Hold'em Session Tracker</p>
-            <div class="community-selector" id="communitySelector">
-                <span id="communityName" data-i18n-dynamic="notConnected">☁️ Not connected</span>
+            <div class="brand-lockup">
+                <img class="brand-mark" src="./assets/app-icon.svg" alt="">
+                <div class="brand-copy">
+                    <h1>Poker<span class="brand-accent">Guys</span></h1>
+                    <p data-i18n="subtitle">Texas Hold'em Session Tracker</p>
+                </div>
             </div>
-            <button class="lang-toggle" id="langToggleBtn" onclick="toggleLanguage()">中文</button>
+            <div class="header-actions">
+                <button class="community-selector" id="communitySelector" type="button" onclick="showPage('login', document.querySelector('[data-page=login]'))" aria-label="Open community settings">
+                    <span id="communityName" data-i18n-dynamic="notConnected">Offline mode</span>
+                </button>
+                <button class="lang-toggle" id="langToggleBtn" type="button" onclick="toggleLanguage()">中文</button>
+            </div>
         </div>
 
+        <main class="app-content">
         <div id="page-session" class="page active">
+            <section class="session-intro">
+                <div>
+                    <span class="eyebrow" data-i18n="liveSession">Live session</span>
+                    <h2 data-i18n="settleTable">Settle the table.</h2>
+                    <p data-i18n="settleTableHint">Add everyone at the table, record their final stacks, and we'll check that every chip is accounted for.</p>
+                </div>
+                <div class="session-date-chip">
+                    <span data-i18n="today">Today</span>
+                    <strong id="sessionDateDisplay"></strong>
+                </div>
+            </section>
+
             <div class="input-section">
+                <div class="section-label-row">
+                    <h3 data-i18n="tableSetup">Table setup</h3>
+                    <p data-i18n="autoSaveHint">Your live session is saved automatically.</p>
+                </div>
                 <div class="input-row">
                     <div class="input-group">
                         <label data-i18n="buyInAmount">Buy-in Amount</label>
@@ -269,48 +303,62 @@
                         <input type="text" id="newPlayerName" data-i18n-placeholder="nicknamePlaceholder" placeholder="Nickname...">
                     </div>
                 </div>
-                <button class="btn-add" onclick="addPlayer()" data-i18n="addPlayer">➕ Add Player</button>
+                <button class="btn-add" type="button" onclick="addPlayer()"><svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="addPlayer">Add Player</span></button>
             </div>
 
+            <section class="ledger-card">
             <div class="table-header">
                 <div data-i18n="colName">Name</div>
-                <div style="text-align:center" data-i18n="colBuyIn">Buy-in</div>
+                <div style="text-align:center" data-i18n="colBuyIn">Buy-ins</div>
                 <div style="text-align:right" data-i18n="colStack">Stack</div>
                 <div style="text-align:right">P&amp;L</div>
                 <div></div>
             </div>
 
             <div id="playersList"></div>
-            <div id="netStatus"></div>
+            </section>
+            <div id="netStatus" aria-live="polite"></div>
 
             <div class="save-section">
                 <div class="confirm-check">
                     <input type="checkbox" id="confirmSave">
                     <label for="confirmSave" data-i18n="confirmSaveLabel">I confirm to save (will clear current inputs)</label>
                 </div>
-                <button class="btn-save" id="saveBtn" onclick="saveSession()" disabled data-i18n="saveSession">💾 Save Session</button>
+                <button class="btn-save" id="saveBtn" type="button" onclick="saveSession()" disabled><span data-i18n="saveSession">Save Session</span></button>
             </div>
         </div>
 
         <div id="page-history" class="page">
+            <div class="history-list-header">
+                <span class="eyebrow" data-i18n="theLedger">The ledger</span>
+                <h2 data-i18n="sessionHistory">Session history</h2>
+                <p data-i18n="historyHint">Review every game and open a session to see the full table.</p>
+            </div>
             <div id="historyList"></div>
         </div>
 
         <div id="page-stats" class="page">
+            <div class="stats-page-header">
+                <span class="eyebrow" data-i18n="groupForm">Group form</span>
+                <h2 data-i18n="statsTitle">The long game.</h2>
+                <p data-i18n="statsHint">See who's running hot, who is due a comeback, and how results move over time.</p>
+            </div>
             <div id="statsContent"></div>
         </div>
 
         <div id="page-login" class="page">
             <div id="loginContent"></div>
         </div>
+        </main>
+    </div>
     </div>
 
     <!-- Session Edit Modal -->
-    <div id="sessionModal" class="modal">
+    <div id="sessionModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="sessionModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 data-i18n="editSession">Edit Session</h2>
-                <button class="modal-close" onclick="closeModal('sessionModal')">×</button>
+                <h2 id="sessionModalTitle" data-i18n="editSession">Edit Session</h2>
+                <button class="modal-close" type="button" aria-label="Close" onclick="closeModal('sessionModal')">×</button>
             </div>
             <div class="modal-input">
                 <label data-i18n="date">Date</label>
@@ -332,11 +380,11 @@
     </div>
 
     <!-- Player Detail Modal -->
-    <div id="playerModal" class="modal">
+    <div id="playerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="playerModalTitle" data-i18n="playerHistory">Player History</h2>
-                <button class="modal-close" onclick="closeModal('playerModal')">×</button>
+                <button class="modal-close" type="button" aria-label="Close" onclick="closeModal('playerModal')">×</button>
             </div>
             <div class="stats-summary" style="margin-bottom: 15px;">
                 <div class="stat-card">
@@ -352,11 +400,25 @@
         </div>
     </div>
 
-    <nav class="nav">
-        <button class="nav-item active" onclick="showPage('session')" data-i18n="navSession">🃏 Session</button>
-        <button class="nav-item" onclick="showPage('history')" data-i18n="navHistory">📜 History</button>
-        <button class="nav-item" onclick="showPage('stats')" data-i18n="navStats">📊 Stats</button>
-        <button class="nav-item" onclick="showPage('login')" data-i18n="navLogin">👤 Login</button>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <nav class="nav" aria-label="Primary navigation">
+        <button class="nav-item active" type="button" data-page="session" onclick="showPage('session', this)">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M12 8c-1.3 2.1-3.2 3.1-3.2 5a2.5 2.5 0 0 0 3 2.5c-.2.8-.6 1.5-1.2 2h2.8c-.6-.5-1-1.2-1.2-2a2.5 2.5 0 0 0 3-2.5c0-1.9-1.9-2.9-3.2-5Z"/></svg></span>
+            <span data-i18n="navSession">Session</span>
+        </button>
+        <button class="nav-item" type="button" data-page="history" onclick="showPage('history', this)">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+            <span data-i18n="navHistory">History</span>
+        </button>
+        <button class="nav-item" type="button" data-page="stats" onclick="showPage('stats', this)">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 20V10h4v10M10 20V4h4v16M15 20v-7h4v7"/></svg></span>
+            <span data-i18n="navStats">Stats</span>
+        </button>
+        <button class="nav-item" type="button" data-page="login" onclick="showPage('login', this)">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></span>
+            <span data-i18n="navLogin">Group</span>
+        </button>
     </nav>
 
     <script>
@@ -367,19 +429,25 @@
             en: {
                 // Header
                 subtitle: "Texas Hold'em Session Tracker",
-                notConnected: "☁️ Not connected",
+                notConnected: "Offline mode",
                 langToggle: "中文",
 
                 // Session page
+                liveSession: "Live session",
+                settleTable: "Settle the table.",
+                settleTableHint: "Add everyone at the table, record their final stacks, and we'll check that every chip is accounted for.",
+                today: "Today",
+                tableSetup: "Table setup",
+                autoSaveHint: "Your live session is saved automatically.",
                 buyInAmount: "Buy-in Amount",
                 newPlayer: "New Player",
                 nicknamePlaceholder: "Nickname...",
-                addPlayer: "➕ Add Player",
+                addPlayer: "Add Player",
                 colName: "Name",
-                colBuyIn: "Buy-in",
+                colBuyIn: "Buy-ins",
                 colStack: "Stack",
-                confirmSaveLabel: "I confirm to save (will clear current inputs)",
-                saveSession: "💾 Save Session",
+                confirmSaveLabel: "Final stacks are correct — finish this session",
+                saveSession: "Save Session",
 
                 // Net status
                 tableEven: "✅ Table is EVEN",
@@ -396,6 +464,9 @@
                 noHistory: "No sessions recorded yet.",
                 loginToViewHistory: "Please login to view history",
                 players: "players",
+                theLedger: "The ledger",
+                sessionHistory: "Session history",
+                historyHint: "Review every game and open a session to see the full table.",
 
                 // Edit modal
                 editSession: "Edit Session",
@@ -411,10 +482,10 @@
                 totalNet: "Total Net",
 
                 // Nav
-                navSession: "🃏 Session",
-                navHistory: "📜 History",
-                navStats: "📊 Stats",
-                navLogin: "👤 Login",
+                navSession: "Session",
+                navHistory: "History",
+                navStats: "Stats",
+                navLogin: "Group",
 
                 // Stats
                 totalSessions: "Total Sessions",
@@ -452,6 +523,9 @@
                 noPlayersWithSessions: "No players with 3+ sessions",
                 fiveSessionsNeeded: "5+ sessions needed",
                 xMultiBuyinWins: "x multi-buyin wins",
+                groupForm: "Group form",
+                statsTitle: "The long game.",
+                statsHint: "See who's running hot, who is due a comeback, and how results move over time.",
 
                 // Player detail
                 winRate: "Win Rate",
@@ -490,6 +564,13 @@
                 theyCanJoin: "They can join by entering this code and their name!",
                 manualEntry: "Manual Entry",
                 importData: "Import Data",
+                installApp: "Put PokerGuys on your phone",
+                installDescription: "Launch it from your Home Screen with a full-screen, app-like experience.",
+                installButton: "Install app",
+                iosInstallHint: "On iPhone, tap Share in Safari, then choose Add to Home Screen.",
+                installBrowserHint: "Open this page in Safari or Chrome and choose Add to Home Screen / Install App.",
+                copyCode: "Copy invite code",
+                copied: "Copied",
 
                 // Alerts
                 alertEnterName: "Please enter a player name",
@@ -512,19 +593,25 @@
             zh: {
                 // Header
                 subtitle: "德州扑克局记录器",
-                notConnected: "☁️ 未连接",
+                notConnected: "离线模式",
                 langToggle: "EN",
 
                 // Session page
+                liveSession: "进行中的牌局",
+                settleTable: "轻松结算牌桌。",
+                settleTableHint: "添加所有玩家、记录最终筹码，系统会检查每一枚筹码是否都已对上。",
+                today: "今天",
+                tableSetup: "牌桌设置",
+                autoSaveHint: "进行中的牌局会自动保存。",
                 buyInAmount: "买入金额",
                 newPlayer: "新玩家",
                 nicknamePlaceholder: "昵称...",
-                addPlayer: "➕ 添加玩家",
+                addPlayer: "添加玩家",
                 colName: "姓名",
-                colBuyIn: "买入",
+                colBuyIn: "买入次数",
                 colStack: "筹码",
-                confirmSaveLabel: "我确认保存(将清空当前输入)",
-                saveSession: "💾 保存本局",
+                confirmSaveLabel: "最终筹码已确认 — 完成本局",
+                saveSession: "保存本局",
 
                 // Net status
                 tableEven: "✅ 牌桌平衡",
@@ -541,6 +628,9 @@
                 noHistory: "暂无记录。",
                 loginToViewHistory: "请登录以查看历史记录",
                 players: "位玩家",
+                theLedger: "牌局账本",
+                sessionHistory: "历史牌局",
+                historyHint: "回顾每场牌局，点开记录即可查看完整牌桌。",
 
                 // Edit modal
                 editSession: "编辑本局",
@@ -556,10 +646,10 @@
                 totalNet: "总净值",
 
                 // Nav
-                navSession: "🃏 本局",
-                navHistory: "📜 历史",
-                navStats: "📊 统计",
-                navLogin: "👤 登录",
+                navSession: "本局",
+                navHistory: "历史",
+                navStats: "统计",
+                navLogin: "牌友圈",
 
                 // Stats
                 totalSessions: "总局数",
@@ -597,6 +687,9 @@
                 noPlayersWithSessions: "没有达到3局以上的玩家",
                 fiveSessionsNeeded: "需要5局以上",
                 xMultiBuyinWins: "次多买入后获胜",
+                groupForm: "牌友表现",
+                statsTitle: "看看长期战绩。",
+                statsHint: "谁的手气正旺、谁即将反弹，以及盈亏如何随时间变化。",
 
                 // Player detail
                 winRate: "胜率",
@@ -635,6 +728,13 @@
                 theyCanJoin: "他们输入此代码和姓名即可加入!",
                 manualEntry: "手动输入",
                 importData: "导入数据",
+                installApp: "将 PokerGuys 添加到手机",
+                installDescription: "从主屏幕全屏启动，获得更接近原生 App 的体验。",
+                installButton: "安装 App",
+                iosInstallHint: "在 iPhone Safari 中点按分享，然后选择“添加到主屏幕”。",
+                installBrowserHint: "请在 Safari 或 Chrome 中打开本页，并选择“添加到主屏幕 / 安装应用”。",
+                copyCode: "复制邀请码",
+                copied: "已复制",
 
                 // Alerts
                 alertEnterName: "请输入玩家姓名",
@@ -684,6 +784,7 @@
             if (document.getElementById('page-stats').classList.contains('active')) renderStats();
             if (document.getElementById('page-login').classList.contains('active')) renderLoginPage();
             renderCommunitySelector();
+            updateSessionDateDisplay();
         }
 
         function toggleLanguage() {
@@ -698,16 +799,68 @@
         let players = [];
         let sessions = JSON.parse(localStorage.getItem('pokerSessions') || '[]');
         let editingSessionId = null;
+        let editingSessionDraft = null;
+        let isSessionReadOnly = false;
+        let deferredInstallPrompt = null;
+
+        function getLocalISODate(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateSessionDateDisplay() {
+            const dateEl = document.getElementById('sessionDateDisplay');
+            if (!dateEl) return;
+            dateEl.textContent = new Intl.DateTimeFormat(currentLang === 'zh' ? 'zh-HK' : 'en-GB', {
+                day: '2-digit',
+                month: 'short'
+            }).format(new Date());
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function hapticImpact(style = 'Light') {
+            const haptics = window.Capacitor?.Plugins?.Haptics;
+            if (haptics) haptics.impact({ style }).catch(() => {});
+        }
+
+        function hapticNotification(type = 'SUCCESS') {
+            const haptics = window.Capacitor?.Plugins?.Haptics;
+            if (haptics) haptics.notification({ type }).catch(() => {});
+        }
+
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            clearTimeout(toastTimer);
+            toast.textContent = message;
+            toast.classList.add('visible');
+            toastTimer = setTimeout(() => toast.classList.remove('visible'), 2600);
+        }
 
         // Live session auto-save (survives page refresh)
         const LIVE_SESSION_KEY = 'pokerLiveSession';
         const LIVE_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
         function saveLiveSession() {
-            if (players.length === 0) return;
+            if (players.length === 0) {
+                clearLiveSession();
+                return;
+            }
             localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify({
                 players,
                 editingSessionId,
+                baseBuyIn: parseFloat(document.getElementById('buyInAmount')?.value) || 1000,
                 savedAt: Date.now()
             }));
         }
@@ -724,6 +877,7 @@
                 }
                 players = session.players;
                 editingSessionId = session.editingSessionId || null;
+                if (session.baseBuyIn) buyInInput.value = session.baseBuyIn;
                 renderPlayers();
                 if (editingSessionId) {
                     const confirmCheck = document.getElementById('confirmSave');
@@ -857,8 +1011,8 @@
         async function saveSessionToCloud(sessionData) {
             if (!currentCommunity) {
                 const communitySessions = getCommunitySessions();
-                if (sessionData.id && sessions.some(s => s.id === sessionData.id)) {
-                    const idx = sessions.findIndex(s => s.id === sessionData.id);
+                if (sessionData.id && sessions.some(s => sessionIdMatches(s, sessionData.id))) {
+                    const idx = sessions.findIndex(s => sessionIdMatches(s, sessionData.id));
                     sessions[idx] = sessionData;
                 } else {
                     communitySessions.unshift(sessionData);
@@ -882,7 +1036,7 @@
 
                     if (error) throw error;
 
-                    const idx = sessions.findIndex(s => s.id === sessionData.id);
+                    const idx = sessions.findIndex(s => sessionIdMatches(s, sessionData.id));
                     if (idx >= 0) sessions[idx] = sessionData;
                     saveToLocalStorage();
                     return;
@@ -909,14 +1063,16 @@
             } catch (err) {
                 console.error('Save session error:', err);
                 const communitySessions = getCommunitySessions();
-                communitySessions.unshift(sessionData);
+                const existingIndex = communitySessions.findIndex(s => sessionIdMatches(s, sessionData.id));
+                if (existingIndex >= 0) communitySessions[existingIndex] = sessionData;
+                else communitySessions.unshift(sessionData);
                 saveCommunitySessions(communitySessions);
             }
         }
 
         async function deleteSessionFromCloud(sessionId) {
             if (!currentCommunity) {
-                const communitySessions = getCommunitySessions().filter(s => s.id !== sessionId);
+                const communitySessions = getCommunitySessions().filter(s => !sessionIdMatches(s, sessionId));
                 saveCommunitySessions(communitySessions);
                 return;
             }
@@ -927,7 +1083,7 @@
                     .delete()
                     .eq('id', sessionId);
 
-                sessions = sessions.filter(s => s.id !== sessionId);
+                sessions = sessions.filter(s => !sessionIdMatches(s, sessionId));
                 saveToLocalStorage();
             } catch (err) {
                 console.error('Delete error:', err);
@@ -951,11 +1107,12 @@
             renderStats();
         }
 
-        initSupabase();
-        restoreLiveSession();
-
         function getCommunitySessions() {
             return sessions;
+        }
+
+        function sessionIdMatches(session, id) {
+            return String(session?.id) === String(id);
         }
 
         function saveCommunitySessions(s) {
@@ -980,32 +1137,40 @@
         const confirmCheck = document.getElementById('confirmSave');
         const saveBtn = document.getElementById('saveBtn');
 
-        confirmCheck.addEventListener('change', () => { saveBtn.disabled = !confirmCheck.checked || players.length === 0; });
+        function updateSaveState() {
+            const { net } = calculateTotals();
+            saveBtn.disabled = !confirmCheck.checked || players.length < 2 || Math.abs(net) >= 1;
+        }
+
+        confirmCheck.addEventListener('change', updateSaveState);
 
         function addPlayer() {
             const name = newPlayerInput.value.trim();
             const buyIn = parseFloat(buyInInput.value) || 1000;
             if (!name) { alert(t('alertEnterName')); return; }
             players.push({ name, hands: 1, buyIn, stack: buyIn });
+            hapticImpact();
             newPlayerInput.value = '';
             renderPlayers();
-            saveBtn.disabled = !confirmCheck.checked || players.length === 0;
             saveLiveSession();
+            newPlayerInput.focus();
         }
 
         function removePlayer(index) {
             players.splice(index, 1);
             renderPlayers();
-            saveBtn.disabled = !confirmCheck.checked || players.length === 0;
             saveLiveSession();
         }
 
         function changeHands(index, delta) {
+            hapticImpact();
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
+            const oldBuyIn = players[index].buyIn;
+            const stackWasUntouched = players[index].stack === oldBuyIn;
             players[index].hands += delta;
             if (players[index].hands < 1) players[index].hands = 1;
             players[index].buyIn = players[index].hands * baseBuyIn;
-            players[index].stack = players[index].buyIn;
+            if (stackWasUntouched) players[index].stack = players[index].buyIn;
             renderPlayers();
             saveLiveSession();
         }
@@ -1018,7 +1183,11 @@
 
         function updateAllStacks() {
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
-            players.forEach(p => { p.buyIn = p.hands * baseBuyIn; p.stack = p.buyIn; });
+            players.forEach(p => {
+                const stackWasUntouched = p.stack === p.buyIn;
+                p.buyIn = p.hands * baseBuyIn;
+                if (stackWasUntouched) p.stack = p.buyIn;
+            });
             renderPlayers();
             saveLiveSession();
         }
@@ -1034,19 +1203,20 @@
         function renderPlayers() {
             const { totalUp, totalDown, net } = calculateTotals();
             if (players.length === 0) {
-                playersList.innerHTML = '<div class="empty">' + (currentLang === 'zh' ? '暂无玩家。' : 'No players yet.') + '</div>';
+                playersList.innerHTML = '<div class="empty">' + (currentLang === 'zh' ? '添加牌友开始记录本局。' : 'Add your friends to start the ledger.') + '</div>';
             } else {
                 let html = '';
                 players.forEach((p, i) => {
                     const pnl = p.stack - p.buyIn;
                     const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                     const pnlPrefix = pnl >= 0 ? '+' : '';
-                    html += `<div class="player-row"><div><input type="text" class="name-input" value="${p.name}" onchange="updateName(${i}, this.value)"></div><div class="hands-control"><button class="btn-hands" onclick="changeHands(${i}, -1)">-</button><span class="hands-num">${p.hands}</span><button class="btn-hands" onclick="changeHands(${i}, 1)">+</button></div><div><input type="number" class="stack-input" value="${p.stack}" onchange="updateStack(${i}, this.value)"></div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl).toLocaleString()}</div><button class="btn-delete" onclick="removePlayer(${i})">🗑️</button></div>`;
+                    html += `<div class="player-row"><div><input type="text" aria-label="Player name" class="name-input" value="${escapeHtml(p.name)}" onchange="updateName(${i}, this.value)"></div><div class="hands-control"><button class="btn-hands" type="button" aria-label="Remove buy-in" onclick="changeHands(${i}, -1)">−</button><span class="hands-num">${p.hands}</span><button class="btn-hands" type="button" aria-label="Add buy-in" onclick="changeHands(${i}, 1)">+</button></div><div><input type="number" inputmode="decimal" aria-label="Final stack" class="stack-input" value="${p.stack}" onchange="updateStack(${i}, this.value)"></div><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl).toLocaleString()}</div><button class="btn-delete" type="button" aria-label="Remove ${escapeHtml(p.name)}" onclick="removePlayer(${i})">Remove</button></div>`;
                 });
                 playersList.innerHTML = html;
             }
             renderNetStatus(net);
             renderTotals(totalUp, totalDown);
+            updateSaveState();
         }
 
         function renderNetStatus(net) {
@@ -1059,17 +1229,24 @@
 
         function renderTotals(totalUp, totalDown) {
             let totalsDiv = document.getElementById('totals');
-            if (!totalsDiv) { totalsDiv = document.createElement('div'); totalsDiv.id = 'totals'; totalsDiv.className = 'totals'; document.body.appendChild(totalsDiv); }
+            if (!totalsDiv) {
+                totalsDiv = document.createElement('div');
+                totalsDiv.id = 'totals';
+                totalsDiv.className = 'totals';
+                totalsDiv.setAttribute('role', 'status');
+                totalsDiv.setAttribute('aria-live', 'polite');
+                document.body.appendChild(totalsDiv);
+            }
             totalsDiv.innerHTML = `<div class="total-item"><div class="label">${t('totalUp')}</div><div class="value">${Math.round(totalUp).toLocaleString()}</div></div><div class="total-item"><div class="label">${t('totalDown')}</div><div class="value">${Math.round(totalDown).toLocaleString()}</div></div><div class="total-item"><div class="label">${t('net')}</div><div class="value">${Math.round(totalUp + totalDown).toLocaleString()}</div></div>`;
         }
 
-        function saveSession() {
+        async function saveSession() {
             const { net } = calculateTotals();
             if (Math.abs(net) >= 1) { alert(t('alertCannotSave')); return; }
 
             const sessionData = {
                 id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
+                date: getLocalISODate(),
                 players: JSON.parse(JSON.stringify(players)),
                 totalUp: calculateTotals().totalUp,
                 totalDown: calculateTotals().totalDown,
@@ -1077,21 +1254,18 @@
                 communityId: currentCommunity?.id || 'local'
             };
 
-            saveSessionToCloud(sessionData);
+            saveBtn.disabled = true;
+            await saveSessionToCloud(sessionData);
 
             players = []; confirmCheck.checked = false; saveBtn.disabled = true;
             editingSessionId = null;
             clearLiveSession();
-            renderPlayers(); renderHistory(); renderStats(); alert(t('alertSessionSaved'));
+            hapticNotification();
+            renderPlayers(); renderHistory(); renderStats(); showToast(t('alertSessionSaved'));
         }
 
         function renderHistory() {
             const historyList = document.getElementById('historyList');
-
-            if (!currentCommunity) {
-                historyList.innerHTML = `<div class="empty">${t('loginToViewHistory')}</div>`;
-                return;
-            }
 
             const communitySessions = getCommunitySessions();
 
@@ -1100,23 +1274,30 @@
             communitySessions.forEach((session, idx) => {
                 let biggestWinner = { name: '', pnl: -Infinity };
                 session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl > biggestWinner.pnl) biggestWinner = { name: p.name, pnl }; });
-                html += `<div class="history-item" data-id="${session.id}" onclick="openEditModal('${session.id}', true)"><div class="history-header"><div><div class="history-date">${session.date}</div><div class="history-location">${session.players.length} ${t('players')}</div></div><div class="history-winner"><div class="label">${t('biggestWinner')}</div><div class="name">${biggestWinner.name || '-'}</div></div></div></div>`;
+                const winnerAmount = Number.isFinite(biggestWinner.pnl) ? ` · +${Math.round(biggestWinner.pnl).toLocaleString()}` : '';
+                html += `<button class="history-item" type="button" data-id="${session.id}" onclick="openEditModal('${session.id}', true)"><div class="history-header"><div><div class="history-date">${escapeHtml(session.date)}</div><div class="history-location">${session.players.length} ${t('players')}</div></div><div class="history-winner"><div class="label">${t('biggestWinner')}</div><div class="name">${escapeHtml(biggestWinner.name || '-')}${winnerAmount}</div></div></div></button>`;
             });
             historyList.innerHTML = html;
         }
 
         function openEditModal(sessionId, viewOnly = false) {
-            if (!viewOnly && currentUser && currentUser.role && currentUser.role !== 'owner') {
+            if (!viewOnly && currentCommunity && currentUser && currentUser.role && currentUser.role !== 'owner') {
                 alert(t('alertOnlyOwnerEdit'));
                 return;
             }
 
             editingSessionId = sessionId;
             clearLiveSession();
-            const session = sessions.find(s => s.id === sessionId);
+            const session = sessions.find(s => sessionIdMatches(s, sessionId));
             if (!session) return;
-            document.getElementById('editDate').value = session.date;
-            renderEditPlayers(session.players);
+            editingSessionDraft = JSON.parse(JSON.stringify(session));
+            isSessionReadOnly = Boolean(currentCommunity && currentUser?.role !== 'owner');
+            const editDate = document.getElementById('editDate');
+            editDate.value = editingSessionDraft.date;
+            editDate.disabled = isSessionReadOnly;
+            document.querySelector('.btn-save-changes').style.display = isSessionReadOnly ? 'none' : '';
+            document.querySelector('.btn-delete-session').style.display = isSessionReadOnly ? 'none' : '';
+            renderEditPlayers(editingSessionDraft.players);
             document.getElementById('sessionModal').classList.add('active');
         }
 
@@ -1130,7 +1311,8 @@
                 else totalDown += Math.abs(pnl);
                 const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                 const pnlPrefix = pnl >= 0 ? '+' : '';
-                html += `<div class="player-edit-row"><input type="text" value="${p.name}" id="editName_${i}"><input type="number" value="${p.buyIn || 0}" id="editBuyIn_${i}"><input type="number" value="${p.stack}" id="editStack_${i}"><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div><button class="btn-delete" onclick="removeEditPlayer(${i})">🗑️</button></div>`;
+                const readOnlyAttr = isSessionReadOnly ? 'disabled' : '';
+                html += `<div class="player-edit-row"><input type="text" value="${escapeHtml(p.name)}" id="editName_${i}" ${readOnlyAttr}><input type="number" value="${p.buyIn || 0}" id="editBuyIn_${i}" ${readOnlyAttr}><input type="number" value="${p.stack}" id="editStack_${i}" ${readOnlyAttr}><div class="pnl ${pnlClass}">${pnlPrefix}${Math.round(pnl)}</div>${isSessionReadOnly ? '<div></div>' : `<button class="btn-delete" type="button" aria-label="Remove player" onclick="removeEditPlayer(${i})">Remove</button>`}</div>`;
             });
 
             const net = totalUp - totalDown;
@@ -1138,19 +1320,21 @@
             const netText = Math.abs(net) < 1 ? '✅ EVEN' : (net >= 0 ? `+${Math.round(net)}` : Math.round(net));
             html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>${t('totalRow')}</div><div>${Math.round(totalUp + totalDown).toLocaleString()}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
 
-            html += `<button class="btn-add" style="margin-top:10px;" onclick="addEditPlayer()">${t('addPlayerBtn')}</button>`;
+            if (!isSessionReadOnly) html += `<button class="btn-add" type="button" style="margin-top:10px;" onclick="addEditPlayer()">${t('addPlayerBtn')}</button>`;
             document.getElementById('editPlayersList').innerHTML = html;
         }
 
         function removeEditPlayer(index) {
-            const session = sessions.find(s => s.id === editingSessionId);
+            if (isSessionReadOnly) return;
+            const session = editingSessionDraft;
             if (!session) return;
             session.players.splice(index, 1);
             renderEditPlayers(session.players);
         }
 
         function addEditPlayer() {
-            const session = sessions.find(s => s.id === editingSessionId);
+            if (isSessionReadOnly) return;
+            const session = editingSessionDraft;
             if (!session) return;
             const baseBuyIn = parseFloat(buyInInput.value) || 1000;
             const newPlayerName = currentLang === 'zh' ? '新玩家' : 'New Player';
@@ -1158,8 +1342,12 @@
             renderEditPlayers(session.players);
         }
 
-        function saveSessionChanges() {
-            const session = sessions.find(s => s.id === editingSessionId);
+        async function saveSessionChanges() {
+            if (isSessionReadOnly || (currentCommunity && currentUser?.role !== 'owner')) {
+                alert(t('alertOnlyOwnerEdit'));
+                return;
+            }
+            const session = editingSessionDraft;
             if (!session) return;
 
             session.players.forEach((p, i) => {
@@ -1180,17 +1368,17 @@
             session.date = document.getElementById('editDate').value;
             session.totalUp = totalUp; session.totalDown = -totalDown; session.net = net;
 
-            saveSessionToCloud(session);
+            await saveSessionToCloud(session);
 
             saveToLocalStorage();
             closeModal('sessionModal');
             editingSessionId = null;
             clearLiveSession();
-            renderHistory(); renderStats(); alert(t('alertChangesSaved'));
+            renderHistory(); renderStats(); showToast(t('alertChangesSaved'));
         }
 
         function deleteCurrentSession() {
-            if (!currentUser || currentUser.role !== 'owner') {
+            if (currentCommunity && (!currentUser || currentUser.role !== 'owner')) {
                 alert(t('alertOnlyOwnerDelete'));
                 return;
             }
@@ -1200,7 +1388,7 @@
 
             deleteSessionFromCloud(sessionId);
 
-            sessions = sessions.filter(s => s.id !== sessionId);
+            sessions = sessions.filter(s => !sessionIdMatches(s, sessionId));
             localStorage.setItem('pokerSessions', JSON.stringify(sessions));
 
             closeModal('sessionModal'); renderHistory(); renderStats();
@@ -1208,16 +1396,27 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
-            if (modalId === 'sessionModal') editingSessionId = null;
+            if (modalId === 'sessionModal') {
+                editingSessionId = null;
+                editingSessionDraft = null;
+                isSessionReadOnly = false;
+            }
         }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal(modal.id);
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            const activeModal = document.querySelector('.modal.active');
+            if (activeModal) closeModal(activeModal.id);
+        });
 
         function renderStats() {
             const statsDiv = document.getElementById('statsContent');
-
-            if (!currentCommunity) {
-                statsDiv.innerHTML = `<div class="empty">${t('loginToViewStats')}</div>`;
-                return;
-            }
 
             const communitySessions = getCommunitySessions();
             if (communitySessions.length === 0) { statsDiv.innerHTML = `<div class="empty">${t('noDataYet')}</div>`; return; }
@@ -1354,18 +1553,18 @@
                 <div class="chart-title">${t('accumulatedWinnings')}</div>
                 <div class="chart-filter">
                     <select id="playerFilter" onchange="renderPnLChart()">
-                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${name}">${name} (${playerStats[name].sessions} ${t('sessionsCol')})</option>`).join('') : `<option value="">${t('noPlayersWithSessions')}</option>`}
+                        ${playerNames.length > 0 ? playerNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (${playerStats[name].sessions} ${t('sessionsCol')})</option>`).join('') : `<option value="">${t('noPlayersWithSessions')}</option>`}
                     </select>
                 </div>
                 <div class="line-chart" id="pnlChart"></div>
             </div>`;
 
-            const allPlayerNamesForMonthly = [currentLang === 'zh' ? '全部玩家' : 'All Players', ...Object.keys(playerStats).sort()];
+            const allPlayerNamesForMonthly = Object.keys(playerStats).sort();
             html += `<div class="chart-container">
                 <div class="chart-title">${t('monthlyPnlTrends')}</div>
                 <div class="chart-filter">
                     <select id="monthlyPlayerFilter" onchange="renderMonthlyChart()">
-                        ${allPlayerNamesForMonthly.map(name => `<option value="${name}">${name}</option>`).join('')}
+                        ${allPlayerNamesForMonthly.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}
                     </select>
                 </div>
                 <div id="monthlyBarChart" style="overflow-x:auto;"></div>
@@ -1399,8 +1598,8 @@
                 } else if (stats.currentStreakType === 'L' && stats.currentStreak > 0) {
                     streakHtml = `<span class="streak-cold">🧊 ${stats.currentStreak}L</span>`;
                 }
-                html += `<div class="player-stat-row-ext player-row-filterable" data-sessions="${stats.sessions}" onclick="showPlayerDetail('${name}')">
-                    <div>${name}</div>
+                html += `<div class="player-stat-row-ext player-row-filterable" data-sessions="${stats.sessions}" data-player="${escapeHtml(name)}" onclick="showPlayerDetail(this.dataset.player)">
+                    <div>${escapeHtml(name)}</div>
                     <div>${stats.sessions}</div>
                     <div class="${winRate >= 50 ? 'positive' : 'negative'}">${winRate}%</div>
                     <div class="${pnlClass}">${stats.net >= 0 ? '+' : ''}${Math.round(stats.net).toLocaleString()}</div>
@@ -1411,7 +1610,7 @@
             html += '</div></div>';
 
             const h2hPlayerList = Object.keys(playerStats).sort();
-            const h2hOpts = h2hPlayerList.map(n => `<option value="${n}">${n}</option>`).join('');
+            const h2hOpts = h2hPlayerList.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
             html += `<div class="h2h-section">
                 <h3>${t('headToHead')}</h3>
                 <div class="h2h-selectors">
@@ -1441,19 +1640,16 @@
         function renderMonthlyChart() {
             const container = document.getElementById('monthlyBarChart');
             if (!container) return;
-            const selectedPlayer = document.getElementById('monthlyPlayerFilter')?.value || (currentLang === 'zh' ? '全部玩家' : 'All Players');
+            const selectedPlayer = document.getElementById('monthlyPlayerFilter')?.value || '';
             const communitySessions = getCommunitySessions();
-            const allPlayersLabel = currentLang === 'zh' ? '全部玩家' : 'All Players';
 
             const monthlyData = {};
             communitySessions.forEach(session => {
                 const month = session.date.slice(0, 7);
-                if (!monthlyData[month]) monthlyData[month] = 0;
-                if (selectedPlayer === allPlayersLabel) {
-                    session.players.forEach(p => { monthlyData[month] += (p.stack - p.buyIn); });
-                } else {
-                    const player = session.players.find(p => p.name === selectedPlayer);
-                    if (player) monthlyData[month] += (player.stack - player.buyIn);
+                const player = session.players.find(p => p.name === selectedPlayer);
+                if (player) {
+                    if (!monthlyData[month]) monthlyData[month] = 0;
+                    monthlyData[month] += (player.stack - player.buyIn);
                 }
             });
 
@@ -1753,21 +1949,93 @@
             document.getElementById('playerModal').classList.add('active');
         }
 
-        function showPage(pageName) {
+        function showPage(pageName, navItem = null) {
+            hapticImpact();
+            document.body.dataset.page = pageName;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.remove('active');
+                n.removeAttribute('aria-current');
+            });
             document.getElementById('page-' + pageName).classList.add('active');
-            event.target.classList.add('active');
+            const activeNav = navItem?.closest?.('.nav-item') || document.querySelector(`.nav-item[data-page="${pageName}"]`);
+            if (activeNav) {
+                activeNav.classList.add('active');
+                activeNav.setAttribute('aria-current', 'page');
+            }
+            const totalsBar = document.getElementById('totals');
+            if (totalsBar) totalsBar.hidden = pageName !== 'session';
             if (pageName === 'history') renderHistory();
             if (pageName === 'stats') renderStats();
             if (pageName === 'login') renderLoginPage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        updateSessionDateDisplay();
+        restoreLiveSession();
         renderPlayers(); renderHistory();
-        newPlayerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addPlayer(); });
+        newPlayerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addPlayer(); });
 
         renderCommunitySelector();
         renderLoginPage();
+        initSupabase();
+
+        function isStandaloneApp() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        }
+
+        function isIosDevice() {
+            return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function getInstallCard() {
+            if (isStandaloneApp()) return '';
+            return `
+                <div class="install-card">
+                    <div class="install-card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
+                    </div>
+                    <div>
+                        <h3>${t('installApp')}</h3>
+                        <p>${t('installDescription')}</p>
+                        <button class="btn-community secondary" type="button" onclick="installPokerGuys()">${t('installButton')}</button>
+                    </div>
+                </div>`;
+        }
+
+        async function installPokerGuys() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                renderLoginPage();
+                return;
+            }
+            alert(isIosDevice() ? t('iosInstallHint') : t('installBrowserHint'));
+        }
+
+        async function copyCommunityCode(button) {
+            if (!currentCommunity?.code) return;
+            try {
+                await navigator.clipboard.writeText(currentCommunity.code);
+                const original = button.textContent;
+                button.textContent = t('copied');
+                setTimeout(() => { button.textContent = original; }, 1400);
+            } catch (error) {
+                alert(currentCommunity.code);
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            if (document.getElementById('page-login').classList.contains('active')) renderLoginPage();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            renderLoginPage();
+        });
 
         function renderLoginPage() {
             const loginDiv = document.getElementById('loginContent');
@@ -1776,63 +2044,49 @@
                 loginDiv.innerHTML = `
                     <div class="login-container">
                         <div class="login-header">
-                            <h2>🃏 PokerGuys</h2>
+                            <span class="eyebrow">${t('navLogin')}</span>
+                            <h2>PokerGuys</h2>
                             <p>${t('joinOrCreate')}</p>
                         </div>
 
                         <div class="login-form">
-                            <input type="text" id="loginName" placeholder="${t('yourName')}" value="${localStorage.getItem('pokerUserName') || ''}">
+                            <input type="text" id="loginName" autocomplete="nickname" placeholder="${t('yourName')}" value="${escapeHtml(localStorage.getItem('pokerUserName') || '')}">
                             <input type="text" id="newCommunityNameInput" placeholder="${t('communityNamePlaceholder')}">
-                            <input type="text" id="loginCode" placeholder="${t('communityCodePlaceholder')}" maxlength="6" style="text-transform: uppercase;">
-                            <button class="btn-login" onclick="loginWithCommunity()">${t('joinCommunity')}</button>
+                            <input type="text" id="loginCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${t('communityCodePlaceholder')}" maxlength="6" style="text-transform: uppercase;">
+                            <button class="btn-login" type="button" onclick="loginWithCommunity()">${t('joinCommunity')}</button>
                         </div>
 
-                        <div style="text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 20px;">
+                        <div class="account-note">
                             <p>${t('noCode')}</p>
                             <p>${t('createWithCode')}</p>
                         </div>
-
-                        <div class="import-section">
-                            <h3>${t('importFromScreenshot')}</h3>
-                            <span class="developing-badge">${t('inProgress')}</span>
-                            <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()" disabled>
-                            <img id="importPreview" class="import-preview" alt="Preview">
-                            <div id="importStatus" class="import-status"></div>
-                            <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn" disabled>${t('analyzeImport')}</button>
-                        </div>
+                        ${getInstallCard()}
                     </div>
                 `;
             } else {
                 loginDiv.innerHTML = `
                     <div class="login-container">
                         <div class="login-header">
-                            <h2>👤 ${currentUser?.name || 'Player'}</h2>
+                            <span class="eyebrow">${t('navLogin')}</span>
+                            <h2>${escapeHtml(currentUser?.name || 'Player')}</h2>
                             <p>${t('connectedToCloud')}</p>
                         </div>
 
                         <div class="community-info">
                             <div style="font-size: 12px; color: var(--text-dim);">${t('communityCode')}</div>
-                            <div class="code">${currentCommunity.code}</div>
-                            <div style="font-size: 14px; font-weight: bold; color: var(--gold);">${currentCommunity.name}</div>
+                            <div class="code">${escapeHtml(currentCommunity.code)}</div>
+                            <div style="font-size: 14px; font-weight: bold; color: var(--gold);">${escapeHtml(currentCommunity.name)}</div>
                             <div class="members">${sessions.length} ${t('sessionsSynced')}</div>
                         </div>
 
-                        <button class="btn-community secondary" onclick="logout()" style="width: 100%;">${t('leaveCommunity')}</button>
-
-                        <div style="margin-top: 30px; padding: 15px; background: var(--card); border-radius: 8px; font-size: 12px; color: var(--text-dim);">
+                        <div class="account-note">
                             <strong>${t('shareCode')}</strong><br>
-                            <span style="font-size: 24px; color: var(--gold); font-weight: bold;">${currentCommunity.code}</span><br>
-                            ${t('theyCanJoin')}
+                            <span style="font-size: 24px; color: var(--gold); font-weight: bold;">${escapeHtml(currentCommunity.code)}</span><br>
+                            ${t('theyCanJoin')}<br>
+                            <button class="btn-community secondary" type="button" onclick="copyCommunityCode(this)">${t('copyCode')}</button>
                         </div>
-
-                        <div class="import-section">
-                            <h3>${t('importFromScreenshot')}</h3>
-                            <span class="developing-badge">${t('inProgress')}</span>
-                            <input type="file" id="screenshotInput" accept="image/*" onchange="handleScreenshotUpload()" disabled>
-                            <img id="importPreview" class="import-preview" alt="Preview">
-                            <div id="importStatus" class="import-status"></div>
-                            <button class="btn-community" onclick="analyzeScreenshot()" id="analyzeBtn" disabled>${t('analyzeImport')}</button>
-                        </div>
+                        ${getInstallCard()}
+                        <button class="btn-community secondary" type="button" onclick="logout()" style="width: 100%;">${t('leaveCommunity')}</button>
                     </div>
                 `;
             }
@@ -1964,6 +2218,14 @@
 
         // Apply translations on load
         applyTranslations();
+
+        if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((error) => {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
     </script>
 
     <div class="footer">

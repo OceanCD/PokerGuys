@@ -1,0 +1,21 @@
+{
+  "name": "pokerguys",
+  "version": "0.2.0",
+  "private": true,
+  "description": "A shared poker session ledger for web and iOS.",
+  "scripts": {
+    "serve": "python3 -m http.server 4173",
+    "build": "node scripts/build-web.mjs",
+    "ios:add": "npm run build && npx cap add ios",
+    "ios:sync": "npm run build && npx cap sync ios",
+    "ios:open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/ios": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0"
+  }
+}

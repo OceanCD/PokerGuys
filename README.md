@@ -1,95 +1,60 @@
-# PokerGuys 🃏
+# PokerGuys
 
-Texas Hold'em poker session tracker & finance manager.
+PokerGuys is a bilingual poker session ledger for a private group of friends. It records buy-ins and final stacks, checks that the table balances to zero, saves session history, and turns the shared ledger into player and group statistics.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://poker-guys.vercel.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Current product
 
-## Features
+- **Live session:** add players, track multiple buy-ins, enter final stacks, and validate the table balance.
+- **Reliable on mobile:** an in-progress table is restored after a refresh for up to 24 hours.
+- **History:** review and edit completed sessions.
+- **Stats:** cumulative and monthly P&L, player records, streaks, ROI, table-size impact, and head-to-head results.
+- **Groups:** join a shared Supabase community using a six-character code.
+- **Bilingual:** English and Traditional Chinese UI.
+- **iPhone-ready:** installable PWA plus a Capacitor configuration for a native iOS build.
 
-### Core Features
-- **Session Recording**: Track buy-ins, final stacks, and number of hands for each player
-- **Balance Validation**: Auto-check if table is balanced (net zero sum)
-- **Player Stats**: Lifetime P&L tracking per player with filtering
-- **Multi-session History**: View and manage past sessions
+The production web app is deployed at [poker-guys.vercel.app](https://poker-guys.vercel.app).
 
-### Community (Cloud Sync)
-- **Create/Join Community**: Start a new poker group or join existing one with 6-char code
-- **Shared Data**: All community members see the same sessions
-- **Player Leaderboard**: See who's winning the most across all sessions
+## Run locally
 
-### UI/UX
-- **Binance-inspired Theme**: Professional dark/light mode
-- **Phone View Mode**: Optimized layout for mobile
-- **Responsive Design**: Works on desktop and mobile
-
-### Statistics Dashboard
-- Total sessions, buy-ins, and net P&L
-- Longest winning streak per player
-- Highest loss in single session
-- Average P&L per session
-- Cumulative P&L chart over time
-- Player performance comparison
-
-## Live Demo
-
-🌐 **Production**: [https://poker-guys.vercel.app](https://poker-guys.vercel.app)
-
-> **Note**: Vercel has limited support for Streamlit apps. For best experience, run locally.
-
-## Quick Start (Local)
+The current production client is the static `index.html` app. No Python packages are needed to work on the UI:
 
 ```bash
-# Clone the repo
-git clone https://github.com/OceanCD/PokerGuys.git
-cd PokerGuys
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run main.py
+python3 -m http.server 4173
 ```
 
-## Tech Stack
+Then open `http://localhost:4173`.
 
-- **Frontend**: Streamlit (Python)
-- **Database**: SQLite (local) + Supabase (community sync)
-- **Charts**: Plotly
-- **Deployment**: Vercel
+The older Streamlit prototype remains in `main.py` as a reference implementation, but it is not the primary web client.
 
-## Community
+## Build the iOS web bundle
 
-A **Community** is your poker group — friends, regular players, or club members who play together.
-
-### How to Use:
-1. **Create a Community**: One person creates a community and gets a 6-character code
-2. **Share the Code**: Share the code with your poker friends
-3. **Join**: Others enter the code to join and see shared session data
-4. **Track Together**: All members can record and view sessions
-
-### Community Code (Demo)
-- Code: `DHILLL`
-- Join to see sample sessions!
-
-## Project Structure
-
+```bash
+npm install
+npm run build
 ```
+
+The command copies the shared web client into `dist/`, which Capacitor uses for the iOS app. See [IOS.md](./IOS.md) for Home Screen, Xcode, TestFlight, and App Store instructions.
+
+## Project structure
+
+```text
 PokerGuys/
-├── main.py              # Main Streamlit app
-├── requirements.txt     # Python dependencies
-├── pokerguys.db        # Local SQLite database
-├── supabase/           # Supabase schema for community
-└── README.md          # This file
+├── index.html                 # Web app markup, state, and calculations
+├── styles.css                # Responsive application UI
+├── manifest.webmanifest      # Home Screen / PWA metadata
+├── sw.js                     # Offline application shell
+├── assets/                   # Shared icons
+├── capacitor.config.json     # Native iOS wrapper configuration
+├── scripts/build-web.mjs     # Builds Capacitor's dist directory
+├── supabase/                 # Database schemas and legacy client helper
+├── main.py                   # Original Streamlit prototype
+└── IOS.md                    # iPhone and App Store workflow
 ```
 
-## Roadmap
+## Data and security note
 
-- [ ] PDF export (Premium)
-- [ ] Import from poker sites
-- [ ] ML win probability predictor
-- [ ] iOS/Android mobile app
+The current `schema-simple.sql` intentionally gives public clients broad table access and treats the community code as a password. That is acceptable only for an early prototype with non-sensitive test data. Before a public or App Store release, use Supabase Auth and membership-aware Row Level Security so one group cannot enumerate or modify another group's data.
 
 ## License
 
-MIT License - feel free to use and modify!
+MIT
