@@ -387,10 +387,12 @@
                 <input type="date" id="editDate">
             </div>
             <div id="editUnitNote" class="edit-unit-note"></div>
-            <div class="table-header" style="border-radius: 8px 8px 0 0;">
+            <p class="edit-session-hint" data-i18n="editSessionHint">Changes are saved to everyone in the group.</p>
+            <div class="table-header edit-table-header" style="border-radius: 8px 8px 0 0;">
                 <div data-i18n="colName">Name</div>
-                <div style="text-align:center" data-i18n="colBuyIn">Buy-in</div>
-                <div style="text-align:right" data-i18n="colStack">Stack</div>
+                <div style="text-align:center" data-i18n="buyInCount">Buy-ins</div>
+                <div style="text-align:right" data-i18n="buyInTotal">Buy-in total</div>
+                <div style="text-align:right" data-i18n="finalStack">Final stack</div>
                 <div style="text-align:right">P&amp;L</div>
                 <div></div>
             </div>
@@ -498,6 +500,10 @@
                 // Edit modal
                 editSession: "Edit Session",
                 date: "Date",
+                buyInCount: "Buy-ins",
+                buyInTotal: "Buy-in total",
+                finalStack: "Final stack",
+                editSessionHint: "Changes are saved to everyone in the group.",
                 saveChanges: "💾 Save Changes",
                 deleteSession: "🗑️ Delete",
                 totalRow: "Total",
@@ -606,6 +612,7 @@
                 alertOnlyOwnerEdit: "Only the community manager can edit sessions",
                 alertCannotSaveBalance: "Cannot save: Table must be balanced! Current net: ",
                 alertChangesSaved: "Changes saved!",
+                alertCloudSaveFailed: "Could not save changes to the group. Please check your connection and try again.",
                 alertOnlyOwnerDelete: "Only the community manager can delete sessions",
                 alertConfirmDelete: "Are you sure you want to delete this session?",
                 alertUploadFirst: "Please upload a screenshot first",
@@ -666,6 +673,10 @@
                 // Edit modal
                 editSession: "编辑本局",
                 date: "日期",
+                buyInCount: "买入次数",
+                buyInTotal: "买入总额",
+                finalStack: "最终筹码",
+                editSessionHint: "修改会同步给牌友圈内所有成员。",
                 saveChanges: "💾 保存修改",
                 deleteSession: "🗑️ 删除",
                 totalRow: "合计",
@@ -774,6 +785,7 @@
                 alertOnlyOwnerEdit: "只有社区管理员才能编辑记录",
                 alertCannotSaveBalance: "无法保存:牌桌必须平衡!当前净值:",
                 alertChangesSaved: "修改已保存!",
+                alertCloudSaveFailed: "无法将修改同步到牌友圈，请检查网络后重试。",
                 alertOnlyOwnerDelete: "只有社区管理员才能删除记录",
                 alertConfirmDelete: "确定要删除这局记录吗?",
                 alertUploadFirst: "请先上传截图",
@@ -1013,6 +1025,12 @@
         let currentUser = null;
         let currentCommunity = null;
 
+        function getCommunityRole(community, userName) {
+            const ownerName = String(community?.owner_name || '').trim().toLocaleLowerCase();
+            const normalizedUserName = String(userName || '').trim().toLocaleLowerCase();
+            return ownerName && ownerName === normalizedUserName ? 'owner' : 'member';
+        }
+
         // Supabase config - replace with your credentials
         const SUPABASE_URL = 'https://nqejbumjkezgvnynxlol.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_qCcxgVrsPbGRosKB3VCc6Q_FHImX10J';
@@ -1029,6 +1047,8 @@
                 if (savedCommunity && savedUser) {
                     currentCommunity = JSON.parse(savedCommunity);
                     currentUser = JSON.parse(savedUser);
+                    currentUser.role = getCommunityRole(currentCommunity, currentUser.name);
+                    localStorage.setItem('pokerUser', JSON.stringify(currentUser));
                     await loadSessionsFromCloud();
                 }
 
@@ -1078,7 +1098,7 @@
                     community = newCommunity;
                     currentUser = { name, role: 'owner' };
                 } else {
-                    currentUser = { name, role: 'member' };
+                    currentUser = { name, role: getCommunityRole(community, name) };
                 }
 
                 currentCommunity = community;
@@ -1132,7 +1152,7 @@
                     communitySessions.unshift(sessionData);
                 }
                 saveCommunitySessions(communitySessions);
-                return;
+                return true;
             }
 
             try {
@@ -1146,14 +1166,17 @@
                             total_down: sessionData.totalDown,
                             net: sessionData.net
                         })
-                        .eq('id', sessionData.id);
+                        .eq('id', sessionData.id)
+                        .eq('community_id', currentCommunity.id)
+                        .select('id')
+                        .single();
 
                     if (error) throw error;
 
                     const idx = sessions.findIndex(s => sessionIdMatches(s, sessionData.id));
                     if (idx >= 0) sessions[idx] = sessionData;
                     saveToLocalStorage();
-                    return;
+                    return true;
                 }
 
                 const { data, error } = await supabaseClient
@@ -1173,14 +1196,11 @@
 
                 sessions.unshift(data);
                 saveToLocalStorage();
+                return true;
 
             } catch (err) {
                 console.error('Save session error:', err);
-                const communitySessions = getCommunitySessions();
-                const existingIndex = communitySessions.findIndex(s => sessionIdMatches(s, sessionData.id));
-                if (existingIndex >= 0) communitySessions[existingIndex] = sessionData;
-                else communitySessions.unshift(sessionData);
-                saveCommunitySessions(communitySessions);
+                return false;
             }
         }
 
@@ -1403,7 +1423,12 @@
             };
 
             saveBtn.disabled = true;
-            await saveSessionToCloud(sessionData);
+            const saved = await saveSessionToCloud(sessionData);
+            if (!saved) {
+                saveBtn.disabled = false;
+                showToast(t('alertCloudSaveFailed'));
+                return;
+            }
 
             players = []; confirmCheck.checked = false; saveBtn.disabled = true;
             editingSessionId = null;
@@ -1415,7 +1440,7 @@
         function renderHistory() {
             const historyList = document.getElementById('historyList');
 
-            const communitySessions = getCommunitySessions();
+            const communitySessions = [...getCommunitySessions()].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (communitySessions.length === 0) { historyList.innerHTML = `<div class="empty">${t('noHistory')}</div>`; return; }
             let html = '';
@@ -1456,25 +1481,60 @@
         function renderEditPlayers(playersArr) {
             let html = '';
             let totalUp = 0, totalDown = 0;
+            let totalBuyIn = 0, totalStack = 0;
 
             playersArr.forEach((p, i) => {
+                const hands = Math.max(1, Number.parseInt(p.hands, 10) || 1);
                 const displayBuyIn = convertSessionAmount(editingSessionDraft, p.buyIn);
                 const displayStack = convertSessionAmount(editingSessionDraft, p.stack);
                 const pnl = displayStack - displayBuyIn;
+                totalBuyIn += displayBuyIn;
+                totalStack += displayStack;
                 if (pnl >= 0) totalUp += pnl;
                 else totalDown += Math.abs(pnl);
                 const pnlClass = pnl >= 0 ? 'positive' : 'negative';
                 const readOnlyAttr = isSessionReadOnly ? 'disabled' : '';
-                html += `<div class="player-edit-row"><input type="text" value="${escapeHtml(p.name)}" id="editName_${i}" ${readOnlyAttr}><input type="number" step="any" value="${displayBuyIn}" id="editBuyIn_${i}" ${readOnlyAttr}><input type="number" step="any" value="${displayStack}" id="editStack_${i}" ${readOnlyAttr}><div class="pnl ${pnlClass}">${formatCurrentAmount(pnl, true)}</div>${isSessionReadOnly ? '<div></div>' : `<button class="btn-delete" type="button" aria-label="Remove player" onclick="removeEditPlayer(${i})">Remove</button>`}</div>`;
+                html += `<div class="player-edit-row">
+                    <input type="text" aria-label="${t('colName')}" value="${escapeHtml(p.name)}" id="editName_${i}" onchange="updateEditPlayerField(${i}, 'name', this.value)" ${readOnlyAttr}>
+                    <input type="number" inputmode="numeric" min="1" step="1" aria-label="${t('buyInCount')}" value="${hands}" id="editHands_${i}" onchange="updateEditPlayerField(${i}, 'hands', this.value)" ${readOnlyAttr}>
+                    <input type="number" inputmode="decimal" min="0" step="any" aria-label="${t('buyInTotal')}" value="${displayBuyIn}" id="editBuyIn_${i}" onchange="updateEditPlayerField(${i}, 'buyIn', this.value)" ${readOnlyAttr}>
+                    <input type="number" inputmode="decimal" min="0" step="any" aria-label="${t('finalStack')}" value="${displayStack}" id="editStack_${i}" onchange="updateEditPlayerField(${i}, 'stack', this.value)" ${readOnlyAttr}>
+                    <div class="pnl ${pnlClass}">${formatCurrentAmount(pnl, true)}</div>
+                    ${isSessionReadOnly ? '<div></div>' : `<button class="btn-delete" type="button" aria-label="Remove player" onclick="removeEditPlayer(${i})">Remove</button>`}
+                </div>`;
             });
 
             const net = totalUp - totalDown;
             const netClass = Math.abs(net) < 1 ? 'even' : (net >= 0 ? 'positive' : 'negative');
             const netText = Math.abs(net) < 0.01 ? '✅ EVEN' : formatCurrentAmount(net, true);
-            html += `<div class="player-edit-row" style="border-top: 2px solid var(--gold); font-weight: bold;"><div>${t('totalRow')}</div><div>${formatCurrentAmount(totalUp + totalDown)}</div><div></div><div class="${netClass}">${netText}</div><div></div></div>`;
+            html += `<div class="player-edit-row edit-total-row"><div>${t('totalRow')}</div><div></div><div>${formatCurrentAmount(totalBuyIn)}</div><div>${formatCurrentAmount(totalStack)}</div><div class="${netClass}">${netText}</div><div></div></div>`;
 
             if (!isSessionReadOnly) html += `<button class="btn-add" type="button" style="margin-top:10px;" onclick="addEditPlayer()">${t('addPlayerBtn')}</button>`;
             document.getElementById('editPlayersList').innerHTML = html;
+        }
+
+        function updateEditPlayerField(index, field, value) {
+            if (isSessionReadOnly || !editingSessionDraft?.players?.[index]) return;
+            const player = editingSessionDraft.players[index];
+
+            if (field === 'name') {
+                player.name = value.trim();
+                return;
+            }
+
+            if (field === 'hands') {
+                const previousHands = Math.max(1, Number.parseInt(player.hands, 10) || 1);
+                const nextHands = Math.max(1, Number.parseInt(value, 10) || 1);
+                const buyInPerEntry = player.buyIn / previousHands;
+                player.hands = nextHands;
+                player.buyIn = buyInPerEntry * nextHands;
+            } else if (field === 'buyIn') {
+                player.buyIn = convertDisplayAmountToSession(editingSessionDraft, value);
+            } else if (field === 'stack') {
+                player.stack = convertDisplayAmountToSession(editingSessionDraft, value);
+            }
+
+            renderEditPlayers(editingSessionDraft.players);
         }
 
         function removeEditPlayer(index) {
@@ -1511,11 +1571,17 @@
             const session = editingSessionDraft;
             if (!session) return;
 
-            session.players.forEach((p, i) => {
-                p.name = document.getElementById('editName_' + i).value;
+            for (let i = 0; i < session.players.length; i++) {
+                const p = session.players[i];
+                p.name = document.getElementById('editName_' + i).value.trim();
+                if (!p.name) {
+                    alert(t('alertEnterName'));
+                    return;
+                }
+                p.hands = Math.max(1, Number.parseInt(document.getElementById('editHands_' + i).value, 10) || 1);
                 p.buyIn = convertDisplayAmountToSession(session, parseFloat(document.getElementById('editBuyIn_' + i).value) || 0);
                 p.stack = convertDisplayAmountToSession(session, parseFloat(document.getElementById('editStack_' + i).value) || 0);
-            });
+            }
 
             let totalUp = 0, totalDown = 0;
             session.players.forEach(p => { const pnl = p.stack - p.buyIn; if (pnl >= 0) totalUp += pnl; else totalDown += Math.abs(pnl); });
@@ -1527,9 +1593,17 @@
             }
 
             session.date = document.getElementById('editDate').value;
+            if (!session.date) {
+                alert(t('alertEnterDate'));
+                return;
+            }
             session.totalUp = totalUp; session.totalDown = -totalDown; session.net = net;
 
-            await saveSessionToCloud(session);
+            const saved = await saveSessionToCloud(session);
+            if (!saved) {
+                alert(t('alertCloudSaveFailed'));
+                return;
+            }
 
             saveToLocalStorage();
             closeModal('sessionModal');
