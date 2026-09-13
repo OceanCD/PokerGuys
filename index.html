@@ -553,7 +553,7 @@
                 wins: "wins",
                 noDataYet: "No data yet. Play some sessions!",
                 loginToViewStats: "Please login to view stats",
-                noPlayersWithSessions: "No players with 3+ sessions",
+                noPlayersWithSessions: "No players with 10+ sessions",
                 fiveSessionsNeeded: "5+ sessions needed",
                 xMultiBuyinWins: "x multi-buyin wins",
                 groupForm: "Group form",
@@ -726,7 +726,7 @@
                 wins: "胜",
                 noDataYet: "暂无数据,快去打牌吧!",
                 loginToViewStats: "请登录以查看统计数据",
-                noPlayersWithSessions: "没有达到3局以上的玩家",
+                noPlayersWithSessions: "没有达到10局以上的玩家",
                 fiveSessionsNeeded: "需要5局以上",
                 xMultiBuyinWins: "次多买入后获胜",
                 groupForm: "牌友表现",
@@ -847,6 +847,7 @@
         let isSessionReadOnly = false;
         let deferredInstallPrompt = null;
         const DEFAULT_CHIPS_PER_HKD = 5;
+        const CHART_MIN_SESSIONS = 10;
         let displayUnit = localStorage.getItem('pokerDisplayUnit') === 'chips' ? 'chips' : 'hkd';
         let sessionEntryUnit = localStorage.getItem('pokerSessionEntryUnit') === 'chips' ? 'chips' : 'hkd';
 
@@ -1787,7 +1788,7 @@
                 <div class="stat-card"><div class="label">${t('biggestSingleLoss')}</div><div class="value negative">${highestSessionLossName || '-'}</div><div class="sub">${highestSessionLoss < 0 ? formatCurrentAmount(highestSessionLoss) : ''}</div></div>
             </div>`;
 
-            const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= 3).sort();
+            const playerNames = Object.keys(playerStats).filter(name => playerStats[name].sessions >= CHART_MIN_SESSIONS).sort();
             html += `<div class="chart-container">
                 <div class="chart-title">${t('accumulatedWinnings')}</div>
                 <div class="chart-filter">
@@ -1798,12 +1799,12 @@
                 <div class="line-chart" id="pnlChart"></div>
             </div>`;
 
-            const allPlayerNamesForMonthly = Object.keys(playerStats).sort();
+            const allPlayerNamesForMonthly = Object.keys(playerStats).filter(name => playerStats[name].sessions >= CHART_MIN_SESSIONS).sort();
             html += `<div class="chart-container">
                 <div class="chart-title">${t('monthlyPnlTrends')}</div>
                 <div class="chart-filter">
                     <select id="monthlyPlayerFilter" onchange="renderMonthlyChart()">
-                        ${allPlayerNamesForMonthly.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}
+                        ${allPlayerNamesForMonthly.length > 0 ? allPlayerNamesForMonthly.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (${playerStats[name].sessions} ${t('sessionsCol')})</option>`).join('') : `<option value="">${t('noPlayersWithSessions')}</option>`}
                     </select>
                 </div>
                 <div id="monthlyBarChart" style="overflow-x:auto;"></div>
